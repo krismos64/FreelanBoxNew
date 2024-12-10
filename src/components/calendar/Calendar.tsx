@@ -1,35 +1,40 @@
-import React, { useState } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import frLocale from '@fullcalendar/core/locales/fr';
-import { Modal } from '@/components/ui/Modal';
-import { EventForm } from './EventForm';
-import { useCalendarStore } from '@/store/calendarStore';
-import { useThemeStore } from '@/store/themeStore';
-import { toast } from 'react-hot-toast';
-import type { CalendarEvent } from '@/types/calendar';
+import React, { useState } from "react";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import frLocale from "@fullcalendar/core/locales/fr";
+import { Modal } from "@/components/ui/Modal";
+import { EventForm } from "./EventForm";
+import { useCalendarStore } from "@/store/calendarStore";
+import { useThemeStore } from "@/store/themeStore";
+import { toast } from "react-hot-toast";
+import type { CalendarEvent } from "@/types/calendar";
 
 export const Calendar: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [selectedDates, setSelectedDates] = useState<{start: Date, end: Date} | null>(null);
-  
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
+    null
+  );
+  const [selectedDates, setSelectedDates] = useState<{
+    start: Date;
+    end: Date;
+  } | null>(null);
+
   const { events, addEvent, updateEvent, deleteEvent } = useCalendarStore();
   const { isDarkMode } = useThemeStore();
 
   const handleDateSelect = (selectInfo: any) => {
     setSelectedDates({
       start: selectInfo.start,
-      end: selectInfo.end
+      end: selectInfo.end,
     });
     setSelectedEvent(null);
     setIsModalOpen(true);
   };
 
   const handleEventClick = (clickInfo: any) => {
-    const event = events.find(e => e.id === clickInfo.event.id);
+    const event = events.find((e) => e.id === clickInfo.event.id);
     if (event) {
       setSelectedEvent(event);
       setSelectedDates(null);
@@ -44,16 +49,16 @@ export const Calendar: React.FC = () => {
         start: new Date(data.start),
         end: new Date(data.end),
       });
-      toast.success('Événement mis à jour');
+      toast.success("Événement mis à jour");
     } else {
       addEvent({
         ...data,
         id: crypto.randomUUID(),
         start: new Date(data.start),
         end: new Date(data.end),
-        status: 'upcoming',
+        status: "upcoming",
       });
-      toast.success('Événement créé');
+      toast.success("Événement créé");
     }
     setIsModalOpen(false);
     setSelectedEvent(null);
@@ -63,7 +68,7 @@ export const Calendar: React.FC = () => {
   const handleDelete = () => {
     if (selectedEvent) {
       deleteEvent(selectedEvent.id);
-      toast.success('Événement supprimé');
+      toast.success("Événement supprimé");
       setIsModalOpen(false);
       setSelectedEvent(null);
     }
@@ -71,28 +76,30 @@ export const Calendar: React.FC = () => {
 
   return (
     <>
-      <div className={`h-full rounded-xl shadow-lg p-4 transition-colors duration-200 ${
-        isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'
-      }`}>
+      <div
+        className={`h-full rounded-xl shadow-lg p-4 transition-colors duration-200 ${
+          isDarkMode ? "bg-gray-800 text-white" : "bg-white"
+        }`}
+      >
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
           headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay',
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay",
           }}
           locale={frLocale}
           selectable={true}
           selectMirror={true}
           dayMaxEvents={true}
           weekends={true}
-          events={events.map(event => ({
+          events={events.map((event) => ({
             ...event,
-            start: event.start.toISOString(),
-            end: event.end.toISOString(),
+            start: new Date(event.start).toISOString(),
+            end: new Date(event.end).toISOString(),
             className: `bg-primary-600 border-primary-700 text-white ${
-              isDarkMode ? 'hover:bg-primary-500' : 'hover:bg-primary-700'
+              isDarkMode ? "hover:bg-primary-500" : "hover:bg-primary-700"
             }`,
           }))}
           select={handleDateSelect}
@@ -110,14 +117,19 @@ export const Calendar: React.FC = () => {
           setSelectedEvent(null);
           setSelectedDates(null);
         }}
-        title={selectedEvent ? 'Modifier l\'événement' : 'Nouvel événement'}
+        title={selectedEvent ? "Modifier l'événement" : "Nouvel événement"}
       >
         <EventForm
           onSubmit={handleSubmit}
-          initialData={selectedEvent || (selectedDates ? {
-            start: selectedDates.start.toISOString(),
-            end: selectedDates.end.toISOString(),
-          } : undefined)}
+          initialData={
+            selectedEvent ||
+            (selectedDates
+              ? {
+                  start: selectedDates.start.toISOString(),
+                  end: selectedDates.end.toISOString(),
+                }
+              : undefined)
+          }
           isSubmitting={false}
         />
       </Modal>
