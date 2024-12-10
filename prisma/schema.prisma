@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  email         String    @unique
+  password      String
+  name          String
+  company       Company?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  refreshTokens RefreshToken[]
+  clients       Client[]
+  quotes        Quote[]
+  invoices      Invoice[]
+  events        Event[]
+}
+
+model Company {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  address     String
+  postalCode  String
+  city        String
+  phone       String?
+  email       String
+  website     String?
+  siret       String?
+  logo        String?
+  userId      String   @unique @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Client {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String
+  phone       String?
+  address     String?
+  postalCode  String?
+  city        String?
+  siret       String?
+  logo        String?
+  revenue     Float     @default(0)
+  userId      String    @db.ObjectId
+  user        User      @relation(fields: [userId], references: [id])
+  quotes      Quote[]
+  invoices    Invoice[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Quote {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  number           String    @unique
+  date             DateTime
+  validUntil       DateTime
+  status           String    @default("draft") // draft, sent, accepted, rejected
+  total            Float
+  notes            String?
+  termsAndConditions String?
+  userId           String    @db.ObjectId
+  user             User      @relation(fields: [userId], references: [id])
+  clientId         String    @db.ObjectId
+  client           Client    @relation(fields: [clientId], references: [id])
+  items            QuoteItem[]
+  invoice          Invoice?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model QuoteItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  description String
+  quantity    Int
+  unitPrice   Float
+  total       Float
+  quoteId     String   @db.ObjectId
+  quote       Quote    @relation(fields: [quoteId], references: [id])
+}
+
+model Invoice {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  number           String    @unique
+  date             DateTime
+  dueDate          DateTime
+  status           String    @default("draft") // draft, sent, pending, paid
+  total            Float
+  notes            String?
+  termsAndConditions String?
+  userId           String    @db.ObjectId
+  user             User      @relation(fields: [userId], references: [id])
+  clientId         String    @db.ObjectId
+  client           Client    @relation(fields: [clientId], references: [id])
+  quoteId          String?   @unique @db.ObjectId
+  quote            Quote?    @relation(fields: [quoteId], references: [id])
+  items            InvoiceItem[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model InvoiceItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  description String
+  quantity    Int
+  unitPrice   Float
+  total       Float
+  invoiceId   String   @db.ObjectId
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+}
+
+model Event {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  start       DateTime
+  end         DateTime
+  color       String?
+  reminder    Int?
+  category    String?
+  status      String   @default("upcoming")
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model RefreshToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  token     String   @unique
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
