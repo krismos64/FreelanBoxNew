@@ -1,10 +1,10 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
-import Lottie from 'lottie-react';
-import welcomeAnimation from '@/animations/welcome.json';
-import { Button } from '@/components/ui/Button';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useInView } from "react-intersection-observer";
+import Lottie from "lottie-react";
+import welcomeAnimation from "@/animations/welcome.json";
+import { Button } from "@/components/ui/Button";
 import {
   ChartBarIcon,
   DocumentTextIcon,
@@ -12,12 +12,10 @@ import {
   UserGroupIcon,
   CheckCircleIcon,
   ArrowRightIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { scrollYProgress } = useScroll();
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   const [ref, inView] = useInView({
     triggerOnce: true,
@@ -28,39 +26,37 @@ export const LandingPage: React.FC = () => {
     {
       icon: DocumentTextIcon,
       title: "Devis & Factures",
-      description: "Créez et gérez vos documents professionnels en quelques clics"
+      description:
+        "Créez et gérez vos documents professionnels en quelques clics",
     },
     {
       icon: UserGroupIcon,
       title: "Gestion Clients",
-      description: "Centralisez vos contacts et suivez vos relations clients"
+      description: "Centralisez vos contacts et suivez vos relations clients",
     },
     {
       icon: CalendarIcon,
       title: "Planning Intégré",
-      description: "Organisez votre temps et vos rendez-vous efficacement"
+      description: "Organisez votre temps et vos rendez-vous efficacement",
     },
     {
       icon: ChartBarIcon,
       title: "Statistiques",
-      description: "Suivez vos performances et votre croissance"
+      description: "Suivez vos performances et votre croissance",
     },
     {
       icon: CheckCircleIcon,
       title: "Checklist",
-      description: "Gardez le contrôle de vos tâches quotidiennes"
-    }
+      description: "Gardez le contrôle de vos tâches quotidiennes",
+    },
   ];
 
   return (
     <div className="min-h-screen font-['SF Pro Display']">
       {/* Hero Section */}
-      <motion.div 
-        style={{ opacity }}
-        className="relative min-h-screen bg-gradient-to-br from-primary-600 via-secondary-500 to-primary-500 overflow-hidden"
-      >
+      <div className="relative min-h-screen bg-gradient-to-br from-primary-600 via-secondary-500 to-primary-500 overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-10" />
-        
+
         <div className="container mx-auto px-4 py-16 relative z-10">
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-white">
             {/* Logo Animation */}
@@ -70,7 +66,7 @@ export const LandingPage: React.FC = () => {
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="mb-8"
             >
-              <Lottie 
+              <Lottie
                 animationData={welcomeAnimation}
                 className="w-64 h-64 md:w-72 md:h-72"
               />
@@ -87,7 +83,7 @@ export const LandingPage: React.FC = () => {
                 Bienvenue sur FreelanceBox
               </h1>
               <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed">
-                La solution tout-en-un pour gérer votre activité de freelance 
+                La solution tout-en-un pour gérer votre activité de freelance
                 avec simplicité et professionnalisme.
               </p>
             </motion.div>
@@ -99,7 +95,7 @@ export const LandingPage: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.6 }}
             >
               <Button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate("/dashboard")}
                 size="lg"
                 className="text-lg px-8 py-4 bg-white text-primary-600 hover:bg-white/90 hover:scale-105 transform transition-all duration-300 shadow-xl"
               >
@@ -120,7 +116,7 @@ export const LandingPage: React.FC = () => {
             <div className="w-1 h-3 bg-white/50 rounded-full mt-2" />
           </div>
         </motion.div>
-      </motion.div>
+      </div>
 
       {/* Features Section */}
       <div ref={ref} className="py-24 bg-gray-50">
@@ -143,9 +139,7 @@ export const LandingPage: React.FC = () => {
                 <h3 className="text-xl font-semibold mb-2 text-gray-900">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600">
-                  {feature.description}
-                </p>
+                <p className="text-gray-600">{feature.description}</p>
               </motion.div>
             ))}
           </motion.div>
