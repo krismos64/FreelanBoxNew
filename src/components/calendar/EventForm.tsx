@@ -1,16 +1,16 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import type { CalendarEvent } from '@/types/calendar';
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import type { CalendarEvent } from "@/types/calendar";
 
 const eventSchema = z.object({
-  title: z.string().min(1, 'Le titre est requis'),
+  title: z.string().min(1, "Le titre est requis"),
   description: z.string(),
-  start: z.string().min(1, 'La date de début est requise'),
-  end: z.string().min(1, 'La date de fin est requise'),
+  start: z.string().min(1, "La date de début est requise"),
+  end: z.string().min(1, "La date de fin est requise"),
   color: z.string().optional(),
   reminder: z.number().min(0).optional(),
   category: z.string().optional(),
@@ -42,55 +42,63 @@ export const EventForm: React.FC<EventFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Input
         label="Titre"
-        {...register('title')}
+        {...register("title")}
         error={errors.title?.message}
       />
       <Input
         label="Description"
-        {...register('description')}
+        {...register("description")}
         error={errors.description?.message}
       />
       <div className="grid grid-cols-2 gap-4">
         <Input
           label="Début"
           type="datetime-local"
-          {...register('start')}
+          {...register("start")}
           error={errors.start?.message}
         />
         <Input
           label="Fin"
           type="datetime-local"
-          {...register('end')}
+          {...register("end")}
           error={errors.end?.message}
         />
       </div>
       <Input
         label="Catégorie"
-        {...register('category')}
+        {...register("category")}
         error={errors.category?.message}
       />
       <Input
         label="Couleur"
         type="color"
-        {...register('color')}
+        {...register("color")}
         error={errors.color?.message}
       />
       <Input
         label="Rappel (minutes avant)"
         type="number"
-        {...register('reminder', { valueAsNumber: true })}
+        {...register("reminder", { valueAsNumber: true })}
         error={errors.reminder?.message}
       />
-      
+
       <div className="flex justify-end space-x-3">
-        <Button
-          type="submit"
-          variant="gradient"
-          isLoading={isSubmitting}
-        >
-          {initialData ? 'Mettre à jour' : 'Créer'}
+        <Button type="submit" variant="gradient" isLoading={isSubmitting}>
+          {initialData ? "Mettre à jour" : "Créer"}
         </Button>
       </div>
+
+      <style>
+        {`
+          .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+          }
+          .dark input[type="number"]::-webkit-inner-spin-button,
+          .dark input[type="number"]::-webkit-outer-spin-button {
+            filter: invert(1);
+          }
+        `}
+      </style>
     </form>
   );
 };

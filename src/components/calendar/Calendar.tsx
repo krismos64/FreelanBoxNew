@@ -81,6 +81,78 @@ export const Calendar: React.FC = () => {
           isDarkMode ? "bg-gray-800 text-white" : "bg-white"
         }`}
       >
+        <style>
+          {isDarkMode &&
+            `
+            /* Styles pour tous les modes */
+            .fc-day, .fc-day-slot, .fc-timegrid-slot {
+              background-color: rgb(31, 41, 55) !important; /* gray-900 */
+            }
+            .fc-day-today, .fc-timegrid-col.fc-day-today {
+              background-color: rgba(59, 130, 246, 0.1) !important;
+            }
+            .fc td, .fc th {
+              border-color: rgb(75, 85, 99) !important; /* gray-600 */
+            }
+            .fc-theme-standard .fc-scrollgrid {
+              border-color: rgb(75, 85, 99) !important;
+            }
+            
+            /* Styles spécifiques pour le mode jour */
+            .fc-timegrid-slot-lane {
+              background-color: rgb(31, 41, 55) !important;
+            }
+            .fc-timegrid-col {
+              background-color: rgb(31, 41, 55) !important;
+            }
+            
+            /* Amélioration de la visibilité du texte */
+            .fc-daygrid-day-number,
+            .fc-col-header-cell-cushion,
+            .fc-timegrid-axis-cushion,
+            .fc-timegrid-slot-label-cushion,
+            .fc-daygrid-day-top {
+              color: rgb(229, 231, 235) !important; /* gray-200 */
+            }
+            
+            /* Gestion du débordement du texte */
+            .fc-daygrid-event-harness {
+              margin: 1px 0;
+              max-height: 100%;
+              overflow: hidden;
+            }
+            
+            .fc-daygrid-event {
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              padding: 2px 4px;
+              margin: 1px 0;
+            }
+            
+            .fc-daygrid-dot-event {
+              padding: 2px 0;
+            }
+            
+            /* Ajustement de la taille des cellules */
+            .fc-daygrid-day-frame {
+              min-height: 100%;
+              display: flex;
+              flex-direction: column;
+            }
+            
+            .fc-daygrid-day-events {
+              flex-grow: 1;
+              overflow: hidden;
+            }
+            
+            /* Style pour more links */
+            .fc-daygrid-more-link {
+              color: rgb(96, 165, 250) !important; /* blue-400 */
+              font-weight: 500;
+            }
+          `}
+        </style>
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
