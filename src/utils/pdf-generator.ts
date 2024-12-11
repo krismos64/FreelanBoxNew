@@ -1,139 +1,182 @@
-// src/utils/pdf-generator.ts
-
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import type { Quote, Invoice } from "@/types";
 import { formatCurrency } from "./format";
 
-// Types
-interface CompanyInfo {
-  name: string;
-  address: string;
-  postalCode: string;
-  city: string;
-  phone: string;
-  email: string;
-  siret: string;
-  website?: string;
-  rib?: string;
-  iban?: string;
-  bic?: string;
-  ape?: string;
-}
-
-// Constantes
-const COLORS = {
-  primary: [30, 64, 175], // Bleu royal foncé
-  secondary: [249, 250, 251], // Gris très clair
-  textDark: [17, 24, 39], // Noir profond
-  textLight: [255, 255, 255], // Blanc
-  textGrey: [107, 114, 128], // Gris moyen
-} as const;
-
-const FONTS = {
-  normal: {
-    size: {
-      title: 24,
-      subtitle: 12,
-      text: 10,
-      small: 8,
-    },
+const STYLE = {
+  colors: {
+    header: [240, 240, 240] as [number, number, number],
+    borders: [220, 220, 220] as [number, number, number],
+    text: [60, 60, 60] as [number, number, number],
+    textLight: [120, 120, 120] as [number, number, number],
   },
-} as const;
-
-// Utilitaires
-const formatDate = (date: string) =>
-  format(new Date(date), "dd/MM/yyyy", { locale: fr });
-
-// Composants du document
-const generateHeader = (
-  doc: jsPDF,
-  docType: "facture" | "devis",
-  number: string,
-  date: string,
-  companyInfo: CompanyInfo
-) => {
-  // En-tête avec bandeau bleu
-  doc.setFillColor(...COLORS.primary);
-  doc.rect(0, 0, doc.internal.pageSize.width, 40, "F");
-
-  // Titre du document
-  doc.setTextColor(...COLORS.textLight);
-  doc.setFontSize(FONTS.normal.size.title);
-  doc.text(docType.toUpperCase(), 20, 28);
-
-  // Zone d'information du document
-  doc.setTextColor(...COLORS.textDark);
-  doc.setFillColor(...COLORS.secondary);
-  doc.rect(doc.internal.pageSize.width - 160, 50, 140, 60, "F");
-
-  doc.setFontSize(FONTS.normal.size.subtitle);
-  doc.text(`${docType} n°`, doc.internal.pageSize.width - 150, 70);
-  doc.text(number, doc.internal.pageSize.width - 80, 70);
-  doc.text("Date", doc.internal.pageSize.width - 150, 85);
-  doc.text(formatDate(date), doc.internal.pageSize.width - 80, 85);
-
-  // Informations de l'entreprise
-  doc.setFontSize(FONTS.normal.size.text);
-  let yPos = 70;
-
-  [
-    { label: "Nom", value: companyInfo.name },
-    { label: "Adresse", value: companyInfo.address },
-    { label: "", value: `${companyInfo.postalCode} ${companyInfo.city}` },
-    { label: "Email", value: companyInfo.email },
-    { label: "Téléphone", value: companyInfo.phone },
-    { label: "SIRET", value: companyInfo.siret },
-  ].forEach(({ label, value }) => {
-    if (label) doc.text(label, 20, yPos);
-    if (value) doc.text(value, 90, yPos);
-    yPos += 15;
-  });
+  fonts: {
+    normal: "helvetica",
+    bold: "helvetica-bold",
+  },
+  sizes: {
+    title: 20,
+    subtitle: 12,
+    normal: 10,
+    small: 8,
+  },
+  margins: {
+    page: 20,
+    section: 10,
+  },
 };
 
-const generateClientInfo = (doc: jsPDF, client: any, yStart: number = 120) => {
-  doc.setFontSize(FONTS.normal.size.subtitle);
-  doc.text("Client :", 20, yStart);
+const generateHeader = (
+  doc: jsPDF,
+  docType: "FACTURE" | "DEVIS",
+  documentInfo: {
+    number: string;
+    date: string;
+    validUntil?: string;
+    dueDate?: string;
+  },
+  companyInfo: any
+) => {
+  // En-tête avec titre et informations document
+  doc.setFillColor(...STYLE.colors.header);
+  doc.rect(0, 0, doc.internal.pageSize.width, 40, "F");
 
-  doc.setFontSize(FONTS.normal.size.text);
-  let yPos = yStart + 15;
+  // Titre à gauche
+  doc.setFont(STYLE.fonts.bold);
+  doc.setFontSize(STYLE.sizes.title);
+  doc.text(docType, STYLE.margins.page, 30);
 
-  [
+  // Informations document à droite
+  doc.setFontSize(STYLE.sizes.normal);
+  doc.text(`N° ${documentInfo.number}`, doc.internal.pageSize.width - 60, 15);
+  doc.text(
+    `Date : ${format(new Date(documentInfo.date), "dd/MM/yyyy")}`,
+    doc.internal.pageSize.width - 60,
+    25
+  );
+
+  if (documentInfo.validUntil) {
+    doc.text(
+      `Validité : ${format(new Date(documentInfo.validUntil), "dd/MM/yyyy")}`,
+      doc.internal.pageSize.width - 60,
+      35
+    );
+  }
+  if (documentInfo.dueDate) {
+    doc.text(
+      `Échéance : ${format(new Date(documentInfo.dueDate), "dd/MM/yyyy")}`,
+      doc.internal.pageSize.width - 60,
+      35
+    );
+  }
+
+  // Section informations entreprise
+  const companyLines = [
+    companyInfo.name,
+    companyInfo.address,
+    `${companyInfo.postalCode} ${companyInfo.city}`,
+    `Tél : ${companyInfo.phone}`,
+    `Email : ${companyInfo.email}`,
+  ].filter(Boolean);
+
+  const lineHeight = 7;
+  const boxHeight = companyLines.length * lineHeight + 10;
+
+  doc.setFillColor(...STYLE.colors.borders);
+  doc.roundedRect(
+    STYLE.margins.page,
+    50,
+    doc.internal.pageSize.width / 2 - 30,
+    boxHeight,
+    2,
+    2,
+    "F"
+  );
+
+  doc.setFont(STYLE.fonts.normal);
+  doc.setFontSize(STYLE.sizes.normal);
+  let yPos = 55;
+  companyLines.forEach((line) => {
+    if (line) {
+      const maxWidth = doc.internal.pageSize.width / 2 - 40;
+      const text = doc.splitTextToSize(line, maxWidth);
+      doc.text(text, STYLE.margins.page + 5, yPos);
+      yPos += lineHeight;
+    }
+  });
+
+  return boxHeight + 50;
+};
+const generateClientSection = (doc: jsPDF, client: any, startY: number) => {
+  const clientLines = [
     client.name,
     client.address,
     `${client.postalCode} ${client.city}`,
-    client.phone && `Tél : ${client.phone}`,
+    client.phone ? `Tél : ${client.phone}` : null,
     `Email : ${client.email}`,
-  ]
-    .filter(Boolean)
-    .forEach((line) => {
-      doc.text(line, 20, yPos);
-      yPos += 15;
-    });
+  ].filter(Boolean);
 
-  return yPos;
+  const lineHeight = 7;
+  const boxHeight = clientLines.length * lineHeight + 15;
+
+  // Section client
+  doc.setFillColor(...STYLE.colors.borders);
+  doc.roundedRect(
+    doc.internal.pageSize.width / 2 + 10,
+    50,
+    doc.internal.pageSize.width / 2 - 30,
+    boxHeight,
+    2,
+    2,
+    "F"
+  );
+
+  // Titre "CLIENT"
+  doc.setFont(STYLE.fonts.bold);
+  let yPos = 55;
+  doc.text("CLIENT", doc.internal.pageSize.width / 2 + 15, yPos);
+  yPos += 10;
+
+  // Informations client
+  doc.setFont(STYLE.fonts.normal);
+  clientLines.forEach((line) => {
+    if (line) {
+      const maxWidth = doc.internal.pageSize.width / 2 - 40;
+      const text = doc.splitTextToSize(line, maxWidth);
+      doc.text(text, doc.internal.pageSize.width / 2 + 15, yPos);
+      yPos += lineHeight;
+    }
+  });
+
+  return boxHeight + 50;
 };
 
-const generateItemsTable = (doc: jsPDF, items: any[], yStart: number) => {
+const generateItemsTable = (doc: jsPDF, items: any[], startY: number) => {
   (doc as any).autoTable({
-    startY: yStart + 10,
+    startY: startY + 10,
     head: [["Description", "Quantité", "Prix unitaire", "Total"]],
     body: items.map((item) => [
       item.description,
-      item.quantity.toString(),
+      item.quantity,
       formatCurrency(item.unitPrice),
       formatCurrency(item.total),
     ]),
     styles: {
-      fontSize: FONTS.normal.size.text,
-      cellPadding: 6,
+      fontSize: STYLE.sizes.normal,
+      font: STYLE.fonts.normal,
+      lineWidth: 0.5,
+      lineColor: STYLE.colors.borders,
+      cellPadding: 5,
     },
     headStyles: {
-      fillColor: COLORS.primary,
-      textColor: COLORS.textLight,
-      fontStyle: "bold",
+      fillColor: STYLE.colors.header,
+      font: STYLE.fonts.bold,
+      textColor: STYLE.colors.text,
+      halign: "left",
+    },
+    alternateRowStyles: {
+      fillColor: [250, 250, 250],
     },
     columnStyles: {
       0: { cellWidth: "auto" },
@@ -141,96 +184,117 @@ const generateItemsTable = (doc: jsPDF, items: any[], yStart: number) => {
       2: { cellWidth: 40, halign: "right" },
       3: { cellWidth: 40, halign: "right" },
     },
-    theme: "grid",
+    margin: { top: 10 },
   });
 
   return (doc as any).lastAutoTable.finalY;
 };
 
-const generateFooter = (doc: jsPDF, companyInfo: CompanyInfo) => {
-  const legalText = "TVA non applicable, article 293 B du CGI";
-  const companyDetails = [
-    `AutoEntreprise ${companyInfo.name}${
-      companyInfo.website ? ` - Site web : ${companyInfo.website}` : ""
+const generateFooter = (
+  doc: jsPDF,
+  companyInfo: any,
+  total: number,
+  tableEndY: number
+) => {
+  // Total
+  doc.setFont(STYLE.fonts.bold);
+  doc.setFontSize(STYLE.sizes.subtitle);
+  doc.text(
+    `Total TTC : ${formatCurrency(total)}`,
+    doc.internal.pageSize.width - 30,
+    tableEndY + 15,
+    { align: "right" }
+  );
+
+  // TVA
+  doc.setFont(STYLE.fonts.normal, "italic");
+  doc.setFontSize(STYLE.sizes.normal);
+  doc.text(
+    "TVA non applicable, article 293 B du CGI",
+    STYLE.margins.page,
+    tableEndY + 25
+  );
+
+  // Ligne de séparation
+  const footerY = doc.internal.pageSize.height - 30;
+  doc.setDrawColor(...STYLE.colors.borders);
+  doc.line(
+    STYLE.margins.page,
+    footerY - 10,
+    doc.internal.pageSize.width - STYLE.margins.page,
+    footerY - 10
+  );
+
+  // Footer
+  doc.setFont(STYLE.fonts.normal);
+  doc.setFontSize(STYLE.sizes.small);
+
+  const footerText = [
+    `${companyInfo.name}${
+      companyInfo.website ? ` - ${companyInfo.website}` : ""
     }`,
-    "Dispensé d'immatriculation au RCS et au répertoire des métiers",
-    `Siège social : ${companyInfo.address} - SIREN : ${companyInfo.siret}${
-      companyInfo.ape ? ` - Code APE ${companyInfo.ape}` : ""
-    }`,
+    "Merci pour votre confiance !",
+    `Siège social : ${companyInfo.address} - SIREN : ${companyInfo.siret}`,
   ];
 
-  doc.setFontSize(FONTS.normal.size.small);
-  doc.setTextColor(...COLORS.textGrey);
-
-  // Position en bas de page
-  const pageHeight = doc.internal.pageSize.height;
-  let yPos = pageHeight - 30;
-
-  // Mention TVA
-  doc.text(legalText, 20, yPos);
-
-  // Coordonnées bancaires si présentes
-  if (companyInfo.iban || companyInfo.rib) {
-    yPos += 10;
-    if (companyInfo.iban) doc.text(`IBAN : ${companyInfo.iban}`, 20, yPos);
-    if (companyInfo.bic) doc.text(`BIC : ${companyInfo.bic}`, 120, yPos);
-  }
-
-  // Mentions légales centrées
-  companyDetails.forEach((text, index) => {
+  footerText.forEach((line, index) => {
     const textWidth =
-      (doc.getStringUnitWidth(text) * FONTS.normal.size.small) /
+      (doc.getStringUnitWidth(line) * STYLE.sizes.small) /
       doc.internal.scaleFactor;
     const xPos = (doc.internal.pageSize.width - textWidth) / 2;
-    doc.text(text, xPos, pageHeight - 15 + index * 4);
+    doc.text(line, xPos, footerY + index * 4);
   });
 };
 
-// Fonctions d'export principales
-export const generateQuotePDF = (
-  quote: Quote,
-  companyInfo: CompanyInfo
-): jsPDF => {
-  const doc = new jsPDF();
+export const generateQuotePDF = (quote: Quote, companyInfo: any): jsPDF => {
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  });
 
-  generateHeader(doc, "devis", quote.number, quote.date, companyInfo);
+  const headerEndY = generateHeader(
+    doc,
+    "DEVIS",
+    {
+      number: quote.number,
+      date: quote.date,
+      validUntil: quote.validUntil,
+    },
+    companyInfo
+  );
 
-  // Date de validité
-  doc.setFontSize(FONTS.normal.size.text);
-  doc.text(`Valable jusqu'au : ${formatDate(quote.validUntil)}`, 20, 160);
-
-  const clientEndY = generateClientInfo(doc, quote.client, 180);
+  const clientEndY = generateClientSection(doc, quote.client, headerEndY);
   const tableEndY = generateItemsTable(doc, quote.items, clientEndY);
-
-  // Total
-  doc.setFontSize(FONTS.normal.size.subtitle);
-  doc.text(`Total TTC : ${formatCurrency(quote.total)}`, 140, tableEndY + 20);
-
-  generateFooter(doc, companyInfo);
+  generateFooter(doc, companyInfo, quote.total, tableEndY);
 
   return doc;
 };
 
 export const generateInvoicePDF = (
   invoice: Invoice,
-  companyInfo: CompanyInfo
+  companyInfo: any
 ): jsPDF => {
-  const doc = new jsPDF();
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  });
 
-  generateHeader(doc, "facture", invoice.number, invoice.date, companyInfo);
+  const headerEndY = generateHeader(
+    doc,
+    "FACTURE",
+    {
+      number: invoice.number,
+      date: invoice.date,
+      dueDate: invoice.dueDate,
+    },
+    companyInfo
+  );
 
-  // Date d'échéance
-  doc.setFontSize(FONTS.normal.size.text);
-  doc.text(`Date d'échéance : ${formatDate(invoice.dueDate)}`, 20, 160);
-
-  const clientEndY = generateClientInfo(doc, invoice.client, 180);
+  const clientEndY = generateClientSection(doc, invoice.client, headerEndY);
   const tableEndY = generateItemsTable(doc, invoice.items, clientEndY);
-
-  // Total et mentions légales
-  doc.setFontSize(FONTS.normal.size.subtitle);
-  doc.text(`Total TTC : ${formatCurrency(invoice.total)}`, 140, tableEndY + 20);
-
-  generateFooter(doc, companyInfo);
+  generateFooter(doc, companyInfo, invoice.total, tableEndY);
 
   return doc;
 };

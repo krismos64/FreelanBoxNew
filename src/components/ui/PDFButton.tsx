@@ -1,9 +1,10 @@
-import React from "react";
-import { Button } from "./Button";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { generateQuotePDF, generateInvoicePDF } from "@/utils/pdf-generator";
-import { useCompanyStore } from "@/store/companyStore";
+import { toast } from "react-hot-toast";
 import type { Quote, Invoice } from "@/types";
+import { useCompanyStore } from "@/store/companyStore";
 
 interface PDFButtonProps {
   document: Quote | Invoice;
@@ -11,24 +12,29 @@ interface PDFButtonProps {
 }
 
 export const PDFButton: React.FC<PDFButtonProps> = ({ document, type }) => {
-  const { company } = useCompanyStore();
-  const [isGenerating, setIsGenerating] = React.useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const company = useCompanyStore((state) => state.company);
 
-  const handleDownload = async () => {
-    setIsGenerating(true);
+  const handleGeneratePDF = async () => {
+    if (!company || !document) {
+      toast.error("Informations manquantes pour générer le PDF");
+      return;
+    }
+
     try {
+      setIsGenerating(true);
       const doc =
         type === "quote"
           ? generateQuotePDF(document as Quote, company)
           : generateInvoicePDF(document as Invoice, company);
 
-      const number =
-        type === "quote"
-          ? (document as Quote).number
-          : (document as Invoice).number;
-      doc.save(`${type === "quote" ? "devis" : "facture"}-${number}.pdf`);
+      doc.save(
+        `${type === "quote" ? "devis" : "facture"}-${document.number}.pdf`
+      );
+      toast.success("PDF généré avec succès");
     } catch (error) {
-      console.error("Error generating PDF:", error);
+      console.error("Erreur lors de la génération du PDF:", error);
+      toast.error("Erreur lors de la génération du PDF");
     } finally {
       setIsGenerating(false);
     }
@@ -38,8 +44,9 @@ export const PDFButton: React.FC<PDFButtonProps> = ({ document, type }) => {
     <Button
       variant="secondary"
       size="sm"
-      onClick={handleDownload}
+      onClick={handleGeneratePDF}
       isLoading={isGenerating}
+      disabled={!company || !document}
     >
       {!isGenerating && <ArrowDownTrayIcon className="h-4 w-4 mr-2" />}
       {isGenerating ? "Génération..." : "Télécharger le PDF"}
