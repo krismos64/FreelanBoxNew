@@ -1,26 +1,26 @@
-import React, { useState } from 'react';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { Modal } from '@/components/ui/Modal';
-import { QuoteForm } from '@/components/forms/QuoteForm';
-import { QuotesList } from '@/components/quotes/QuotesList';
-import { useQuoteStore } from '@/store/quoteStore';
-import { useClientStore } from '@/store/clientStore';
-import { toast } from 'react-hot-toast';
-import { SuccessAnimation } from '@/components/animations/SuccessAnimation';
-import type { Quote, QuoteFormData } from '@/types/quote';
+import React, { useState } from "react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Modal } from "@/components/ui/Modal";
+import { QuoteForm } from "@/components/forms/QuoteForm";
+import { QuotesList } from "@/components/quotes/QuotesList";
+import { useQuoteStore } from "@/store/quoteStore";
+import { useClientStore } from "@/store/clientStore";
+import { toast } from "react-hot-toast";
+import { SuccessAnimation } from "@/components/animations/SuccessAnimation";
+import type { Quote, QuoteFormData } from "@/types/quote";
 
 export const QuotesPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  
+
   const { addQuote, updateQuote } = useQuoteStore();
   const { getClientById } = useClientStore();
 
   const handleCreateQuote = async (data: QuoteFormData) => {
     const client = getClientById(data.clientId);
     if (!client) {
-      toast.error('Client introuvable');
+      toast.error("Client introuvable");
       return;
     }
 
@@ -32,15 +32,15 @@ export const QuotesPage: React.FC = () => {
 
       setIsModalOpen(false);
       setShowSuccess(true);
-      
-      toast.success('Devis créé avec succès', {
-        icon: '✨',
+
+      toast.success("Devis créé avec succès", {
+        icon: "✨",
         duration: 5000,
       });
 
       return newQuote;
     } catch (error) {
-      toast.error('Erreur lors de la création du devis');
+      toast.error("Erreur lors de la création du devis");
       console.error(error);
     }
   };
@@ -50,7 +50,7 @@ export const QuotesPage: React.FC = () => {
 
     const client = getClientById(data.clientId);
     if (!client) {
-      toast.error('Client introuvable');
+      toast.error("Client introuvable");
       return;
     }
 
@@ -62,19 +62,19 @@ export const QuotesPage: React.FC = () => {
 
       setIsModalOpen(false);
       setSelectedQuote(null);
-      
-      toast.success('Devis mis à jour avec succès', {
-        icon: '✨',
+
+      toast.success("Devis mis à jour avec succès", {
+        icon: "✨",
         duration: 5000,
       });
     } catch (error) {
-      toast.error('Erreur lors de la mise à jour du devis');
+      toast.error("Erreur lors de la mise à jour du devis");
       console.error(error);
     }
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 h-screen overflow-y-auto bg-gray-50 dark:bg-gray-900">
       <PageHeader
         title="Devis"
         buttonText="Nouveau devis"
@@ -84,7 +84,9 @@ export const QuotesPage: React.FC = () => {
         }}
       />
 
-      <QuotesList />
+      <div className="max-w-screen-lg mx-auto">
+        <QuotesList />
+      </div>
 
       <Modal
         isOpen={isModalOpen}
@@ -92,7 +94,7 @@ export const QuotesPage: React.FC = () => {
           setIsModalOpen(false);
           setSelectedQuote(null);
         }}
-        title={selectedQuote ? 'Modifier le devis' : 'Nouveau devis'}
+        title={selectedQuote ? "Modifier le devis" : "Nouveau devis"}
       >
         <QuoteForm
           onSubmit={selectedQuote ? handleUpdateQuote : handleCreateQuote}
