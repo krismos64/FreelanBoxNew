@@ -1,17 +1,40 @@
-import React from 'react';
-import { Button } from '@/components/ui/Button';
-import { formatDate, formatCurrency } from '@/utils/format';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import type { Client } from '@/types';
-import { DocumentTextIcon, DocumentIcon, BanknotesIcon } from '@heroicons/react/24/outline';
+import React, { useMemo } from "react";
+import { Button } from "@/components/ui/Button";
+import { formatCurrency } from "@/utils/format";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { useQuoteStore } from "@/store/quoteStore";
+import { useInvoiceStore } from "@/store/invoiceStore";
+import type { Client } from "@/types";
+import {
+  DocumentTextIcon,
+  DocumentIcon,
+  BanknotesIcon,
+} from "@heroicons/react/24/outline";
 
 interface ClientDetailsProps {
   client: Client;
   onEdit: () => void;
 }
 
-export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onEdit }) => {
+export const ClientDetails: React.FC<ClientDetailsProps> = ({
+  client,
+  onEdit,
+}) => {
+  // Récupérer les listes de devis et factures depuis les stores
+  const quotes = useQuoteStore((state) => state.quotes);
+  const invoices = useInvoiceStore((state) => state.invoices);
+
+  // Calculer le nombre de documents pour ce client
+  const documentCounts = useMemo(
+    () => ({
+      quotes: quotes.filter((quote) => quote.client.id === client.id).length,
+      invoices: invoices.filter((invoice) => invoice.client.id === client.id)
+        .length,
+    }),
+    [quotes, invoices, client.id]
+  );
+
   return (
     <div className="space-y-6">
       {/* Client Info */}
@@ -19,8 +42,8 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onEdit }) 
         <div className="flex justify-between items-start">
           <div className="flex items-center space-x-4">
             {client.logo ? (
-              <img 
-                src={client.logo} 
+              <img
+                src={client.logo}
                 alt={`Logo ${client.name}`}
                 className="w-16 h-16 rounded-lg object-cover"
               />
@@ -36,7 +59,8 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onEdit }) 
                 {client.name}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Client depuis le {format(new Date(client.createdAt), 'PP', { locale: fr })}
+                Client depuis le{" "}
+                {format(new Date(client.createdAt), "PP", { locale: fr })}
               </p>
             </div>
           </div>
@@ -50,8 +74,12 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onEdit }) 
           <div className="flex items-center space-x-3">
             <BanknotesIcon className="w-8 h-8" />
             <div>
-              <p className="text-sm font-medium text-white/90">Chiffre d'affaires total</p>
-              <p className="text-2xl font-bold">{formatCurrency(client.revenue || 0)}</p>
+              <p className="text-sm font-medium text-white/90">
+                Chiffre d'affaires total
+              </p>
+              <p className="text-2xl font-bold">
+                {formatCurrency(client.revenue || 0)}
+              </p>
             </div>
           </div>
         </div>
@@ -75,12 +103,12 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onEdit }) 
             <DocumentCard
               icon={DocumentTextIcon}
               title="Devis"
-              count={client.quotes?.length || 0}
+              count={documentCounts.quotes}
             />
             <DocumentCard
               icon={DocumentIcon}
               title="Factures"
-              count={client.invoices?.length || 0}
+              count={documentCounts.invoices}
             />
           </div>
         </div>
@@ -89,25 +117,34 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onEdit }) 
   );
 };
 
-const InfoField: React.FC<{ label: string; value?: string }> = ({ label, value }) => (
+const InfoField: React.FC<{ label: string; value?: string }> = ({
+  label,
+  value,
+}) => (
   <div>
     <dt className="text-sm text-gray-500 dark:text-gray-400">{label}</dt>
-    <dd className="mt-1 text-sm text-gray-900 dark:text-white">{value || '-'}</dd>
+    <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+      {value || "-"}
+    </dd>
   </div>
 );
 
-const DocumentCard: React.FC<{ icon: React.ElementType; title: string; count: number }> = ({ 
-  icon: Icon, 
-  title, 
-  count 
-}) => (
+const DocumentCard: React.FC<{
+  icon: React.ElementType;
+  title: string;
+  count: number;
+}> = ({ icon: Icon, title, count }) => (
   <div className="flex items-center space-x-3 p-3 bg-white dark:bg-gray-700 rounded-lg shadow-sm">
     <div className="p-2 bg-gray-100 dark:bg-gray-600 rounded-lg">
       <Icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
     </div>
     <div>
-      <p className="text-sm font-medium text-gray-900 dark:text-white">{title}</p>
-      <p className="text-sm text-gray-500 dark:text-gray-400">{count} document{count > 1 ? 's' : ''}</p>
+      <p className="text-sm font-medium text-gray-900 dark:text-white">
+        {title}
+      </p>
+      <p className="text-sm text-gray-500 dark:text-gray-400">
+        {count} document{count > 1 ? "s" : ""}
+      </p>
     </div>
   </div>
 );
