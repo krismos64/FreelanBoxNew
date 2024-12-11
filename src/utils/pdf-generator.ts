@@ -2,28 +2,40 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { format } from "date-fns";
 import type { Quote, Invoice } from "@/types";
-import { formatCurrency } from "./format";
+
+// Fonction utilitaire pour formater la monnaie sans séparateur de milliers
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+    useGrouping: false, // Désactive les séparateurs de milliers
+  }).format(amount);
+};
 
 const STYLE = {
   colors: {
-    header: [240, 240, 240] as [number, number, number],
-    borders: [220, 220, 220] as [number, number, number],
-    text: [60, 60, 60] as [number, number, number],
-    textLight: [120, 120, 120] as [number, number, number],
+    primary: [41, 128, 185] as [number, number, number], // Bleu professionnel très transparent
+    primarySolid: [41, 128, 185] as [number, number, number], // Bleu professionnel solide
+    secondary: [231, 76, 60] as [number, number, number], // Rouge plus doux
+    accent: [245, 245, 245] as [number, number, number], // Gris très clair
+    text: [75, 75, 75] as [number, number, number],
+    textLight: [130, 130, 130] as [number, number, number],
   },
   fonts: {
     normal: "helvetica",
     bold: "helvetica-bold",
   },
   sizes: {
-    title: 20,
-    subtitle: 12,
+    title: 18,
+    subtitle: 14,
     normal: 10,
     small: 8,
   },
   margins: {
     page: 20,
-    section: 10,
+    section: 15,
   },
 };
 
@@ -37,78 +49,66 @@ const generateHeader = (
     dueDate?: string;
   },
   companyInfo: any
-) => {
-  // En-tête avec titre et informations document
-  doc.setFillColor(...STYLE.colors.header);
-  doc.rect(0, 0, doc.internal.pageSize.width, 40, "F");
+): number => {
+  // Bande bleue en haut plus fine et transparente
+  doc.setFillColor(...STYLE.colors.primary);
+  doc.rect(0, 0, doc.internal.pageSize.width, 36, "F");
 
-  // Titre à gauche
+  // Titre du document
+  doc.setTextColor(...STYLE.colors.accent);
   doc.setFont(STYLE.fonts.bold);
   doc.setFontSize(STYLE.sizes.title);
-  doc.text(docType, STYLE.margins.page, 30);
+  doc.text(docType, STYLE.margins.page, 20);
 
-  // Informations document à droite
+  // Numéro et date
   doc.setFontSize(STYLE.sizes.normal);
   doc.text(`N° ${documentInfo.number}`, doc.internal.pageSize.width - 60, 15);
   doc.text(
     `Date : ${format(new Date(documentInfo.date), "dd/MM/yyyy")}`,
     doc.internal.pageSize.width - 60,
-    25
+    22
   );
 
   if (documentInfo.validUntil) {
     doc.text(
       `Validité : ${format(new Date(documentInfo.validUntil), "dd/MM/yyyy")}`,
       doc.internal.pageSize.width - 60,
-      35
+      29
     );
   }
   if (documentInfo.dueDate) {
     doc.text(
       `Échéance : ${format(new Date(documentInfo.dueDate), "dd/MM/yyyy")}`,
       doc.internal.pageSize.width - 60,
-      35
+      29
     );
   }
 
-  // Section informations entreprise
+  // Informations de l'entreprise
+  doc.setTextColor(...STYLE.colors.text);
   const companyLines = [
     companyInfo.name,
-    companyInfo.address,
-    `${companyInfo.postalCode} ${companyInfo.city}`,
     `Tél : ${companyInfo.phone}`,
     `Email : ${companyInfo.email}`,
   ].filter(Boolean);
 
-  const lineHeight = 7;
-  const boxHeight = companyLines.length * lineHeight + 10;
-
-  doc.setFillColor(...STYLE.colors.borders);
-  doc.roundedRect(
-    STYLE.margins.page,
-    50,
-    doc.internal.pageSize.width / 2 - 30,
-    boxHeight,
-    2,
-    2,
-    "F"
-  );
-
   doc.setFont(STYLE.fonts.normal);
-  doc.setFontSize(STYLE.sizes.normal);
-  let yPos = 55;
+  let yPos = 45;
   companyLines.forEach((line) => {
     if (line) {
-      const maxWidth = doc.internal.pageSize.width / 2 - 40;
-      const text = doc.splitTextToSize(line, maxWidth);
-      doc.text(text, STYLE.margins.page + 5, yPos);
-      yPos += lineHeight;
+      doc.text(line, STYLE.margins.page, yPos);
+      yPos += 7;
     }
   });
 
-  return boxHeight + 50;
+  return yPos + 5;
 };
-const generateClientSection = (doc: jsPDF, client: any, startY: number) => {
+
+const generateClientSection = (
+  doc: jsPDF,
+  client: any,
+  startY: number
+): number => {
   const clientLines = [
     client.name,
     client.address,
@@ -117,45 +117,46 @@ const generateClientSection = (doc: jsPDF, client: any, startY: number) => {
     `Email : ${client.email}`,
   ].filter(Boolean);
 
-  const lineHeight = 7;
-  const boxHeight = clientLines.length * lineHeight + 15;
+  const boxHeight = clientLines.length * 8 + 20;
 
-  // Section client
-  doc.setFillColor(...STYLE.colors.borders);
+  doc.setFillColor(...STYLE.colors.accent);
   doc.roundedRect(
-    doc.internal.pageSize.width / 2 + 10,
-    50,
-    doc.internal.pageSize.width / 2 - 30,
+    doc.internal.pageSize.width / 2,
+    startY - 10,
+    doc.internal.pageSize.width / 2 - STYLE.margins.page,
     boxHeight,
-    2,
-    2,
+    3,
+    3,
     "F"
   );
 
-  // Titre "CLIENT"
   doc.setFont(STYLE.fonts.bold);
-  let yPos = 55;
-  doc.text("CLIENT", doc.internal.pageSize.width / 2 + 15, yPos);
-  yPos += 10;
+  doc.setTextColor(...STYLE.colors.primarySolid);
+  doc.text("CLIENT", doc.internal.pageSize.width / 2 + 10, startY);
 
-  // Informations client
   doc.setFont(STYLE.fonts.normal);
+  doc.setTextColor(...STYLE.colors.text);
+  let yPos = startY + 10;
   clientLines.forEach((line) => {
     if (line) {
-      const maxWidth = doc.internal.pageSize.width / 2 - 40;
-      const text = doc.splitTextToSize(line, maxWidth);
-      doc.text(text, doc.internal.pageSize.width / 2 + 15, yPos);
-      yPos += lineHeight;
+      doc.text(line, doc.internal.pageSize.width / 2 + 10, yPos);
+      yPos += 7;
     }
   });
 
-  return boxHeight + 50;
+  return yPos + 2;
 };
 
-const generateItemsTable = (doc: jsPDF, items: any[], startY: number) => {
+const generateItemsTable = (
+  doc: jsPDF,
+  items: any[],
+  startY: number
+): number => {
+  const tableWidth = doc.internal.pageSize.width - 2 * STYLE.margins.page;
+
   (doc as any).autoTable({
     startY: startY + 10,
-    head: [["Description", "Quantité", "Prix unitaire", "Total"]],
+    head: [["Description", "Quantité", "Prix unitaire", "Total T.T.C"]],
     body: items.map((item) => [
       item.description,
       item.quantity,
@@ -163,28 +164,44 @@ const generateItemsTable = (doc: jsPDF, items: any[], startY: number) => {
       formatCurrency(item.total),
     ]),
     styles: {
-      fontSize: STYLE.sizes.normal,
       font: STYLE.fonts.normal,
-      lineWidth: 0.5,
-      lineColor: STYLE.colors.borders,
+      fontSize: STYLE.sizes.normal,
+      lineWidth: 0.1,
+      lineColor: STYLE.colors.primarySolid,
       cellPadding: 5,
     },
     headStyles: {
-      fillColor: STYLE.colors.header,
+      fillColor: STYLE.colors.primarySolid,
+      textColor: "#FFFFFF",
       font: STYLE.fonts.bold,
-      textColor: STYLE.colors.text,
-      halign: "left",
-    },
-    alternateRowStyles: {
-      fillColor: [250, 250, 250],
     },
     columnStyles: {
-      0: { cellWidth: "auto" },
-      1: { cellWidth: 30, halign: "center" },
-      2: { cellWidth: 40, halign: "right" },
-      3: { cellWidth: 40, halign: "right" },
+      0: {
+        cellWidth: tableWidth * 0.5,
+        overflow: "linebreak",
+      },
+      1: {
+        cellWidth: tableWidth * 0.15,
+        halign: "center",
+      },
+      2: {
+        cellWidth: tableWidth * 0.175,
+        halign: "right",
+      },
+      3: {
+        cellWidth: tableWidth * 0.175,
+        halign: "right",
+      },
     },
-    margin: { top: 10 },
+    margin: { left: STYLE.margins.page, right: STYLE.margins.page },
+    tableWidth: tableWidth,
+    didParseCell: function (data: any) {
+      // Assure que les nombres sont bien formatés
+      if (data.column.index > 1 && data.section === "body") {
+        const value = data.cell.raw;
+        data.cell.text = [formatCurrency(parseFloat(value))];
+      }
+    },
   });
 
   return (doc as any).lastAutoTable.finalY;
@@ -195,13 +212,14 @@ const generateFooter = (
   companyInfo: any,
   total: number,
   tableEndY: number
-) => {
+): void => {
   // Total
   doc.setFont(STYLE.fonts.bold);
   doc.setFontSize(STYLE.sizes.subtitle);
+  doc.setTextColor(...STYLE.colors.primarySolid);
   doc.text(
     `Total TTC : ${formatCurrency(total)}`,
-    doc.internal.pageSize.width - 30,
+    doc.internal.pageSize.width - 20,
     tableEndY + 15,
     { align: "right" }
   );
@@ -209,32 +227,28 @@ const generateFooter = (
   // TVA
   doc.setFont(STYLE.fonts.normal, "italic");
   doc.setFontSize(STYLE.sizes.normal);
+  doc.setTextColor(...STYLE.colors.text);
   doc.text(
     "TVA non applicable, article 293 B du CGI",
     STYLE.margins.page,
-    tableEndY + 25
+    tableEndY + 15
   );
 
-  // Ligne de séparation
-  const footerY = doc.internal.pageSize.height - 30;
-  doc.setDrawColor(...STYLE.colors.borders);
-  doc.line(
-    STYLE.margins.page,
-    footerY - 10,
-    doc.internal.pageSize.width - STYLE.margins.page,
-    footerY - 10
-  );
+  // Footer avec fond bleu transparent
+  const footerY = doc.internal.pageSize.height - 25;
+  doc.setFillColor(...STYLE.colors.primary);
+  doc.rect(0, footerY, doc.internal.pageSize.width, 25, "F");
 
-  // Footer
   doc.setFont(STYLE.fonts.normal);
   doc.setFontSize(STYLE.sizes.small);
+  doc.setTextColor(...STYLE.colors.accent);
 
   const footerText = [
     `${companyInfo.name}${
       companyInfo.website ? ` - ${companyInfo.website}` : ""
     }`,
     "Merci pour votre confiance !",
-    `Siège social : ${companyInfo.address} - SIREN : ${companyInfo.siret}`,
+    `Siège social : ${companyInfo.address} ${companyInfo.postalCode} ${companyInfo.city} - SIRET : ${companyInfo.siret}`,
   ];
 
   footerText.forEach((line, index) => {
@@ -242,7 +256,7 @@ const generateFooter = (
       (doc.getStringUnitWidth(line) * STYLE.sizes.small) /
       doc.internal.scaleFactor;
     const xPos = (doc.internal.pageSize.width - textWidth) / 2;
-    doc.text(line, xPos, footerY + index * 4);
+    doc.text(line, xPos, footerY + 8 + index * 6);
   });
 };
 
