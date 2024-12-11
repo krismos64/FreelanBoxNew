@@ -5,6 +5,7 @@ import { z } from "zod";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import type { CalendarEvent } from "@/types/calendar";
+import toast from "react-hot-toast";
 
 const eventSchema = z.object({
   title: z.string().min(1, "Le titre est requis"),
@@ -20,12 +21,14 @@ type EventFormData = z.infer<typeof eventSchema>;
 
 interface EventFormProps {
   onSubmit: (data: EventFormData) => void;
+  onDelete?: (id: string) => void;
   initialData?: Partial<CalendarEvent>;
   isSubmitting?: boolean;
 }
 
 export const EventForm: React.FC<EventFormProps> = ({
   onSubmit,
+  onDelete,
   initialData,
   isSubmitting = false,
 }) => {
@@ -37,6 +40,15 @@ export const EventForm: React.FC<EventFormProps> = ({
     resolver: zodResolver(eventSchema),
     defaultValues: initialData,
   });
+
+  const handleDelete = () => {
+    if (!initialData?.id) return;
+
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cet événement ?")) {
+      onDelete?.(initialData.id);
+      toast.success("Événement supprimé");
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -83,6 +95,12 @@ export const EventForm: React.FC<EventFormProps> = ({
       />
 
       <div className="flex justify-end space-x-3">
+        {/* Bouton de suppression, visible uniquement en mode édition */}
+        {initialData && onDelete && (
+          <Button type="button" variant="danger" onClick={handleDelete}>
+            Supprimer
+          </Button>
+        )}
         <Button type="submit" variant="gradient" isLoading={isSubmitting}>
           {initialData ? "Mettre à jour" : "Créer"}
         </Button>

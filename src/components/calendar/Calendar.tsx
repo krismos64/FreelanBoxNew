@@ -193,12 +193,13 @@ export const Calendar: React.FC = () => {
       >
         <EventForm
           onSubmit={handleSubmit}
+          onDelete={handleDelete}
           initialData={
             selectedEvent ||
             (selectedDates
               ? {
-                  start: selectedDates.start.toISOString(),
-                  end: selectedDates.end.toISOString(),
+                  start: selectedDates.start,
+                  end: selectedDates.end,
                 }
               : undefined)
           }
