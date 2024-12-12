@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Modal } from "@/components/ui/Modal";
 import { QuoteForm } from "@/components/forms/QuoteForm";
@@ -7,7 +7,7 @@ import { useQuoteStore } from "@/store/quoteStore";
 import { useClientStore } from "@/store/clientStore";
 import { toast } from "react-hot-toast";
 import { SuccessAnimation } from "@/components/animations/SuccessAnimation";
-import type { Quote, QuoteFormData } from "@/types/quote";
+import type { Quote, QuoteFormData, QuoteItem } from "@/types/quote";
 
 export const QuotesPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,6 +17,37 @@ export const QuotesPage: React.FC = () => {
   const { addQuote, updateQuote } = useQuoteStore();
   const { getClientById } = useClientStore();
 
+  useEffect(() => {
+    const handleEditQuote = (event: CustomEvent<Quote>) => {
+      setSelectedQuote(event.detail);
+      setIsModalOpen(true);
+    };
+
+    window.addEventListener("editQuote", handleEditQuote as EventListener);
+
+    return () => {
+      window.removeEventListener("editQuote", handleEditQuote as EventListener);
+    };
+  }, []);
+
+  const calculateItemTotal = (
+    item: Omit<QuoteItem, "id" | "total">
+  ): number => {
+    const quantity = Number(item.quantity) || 0;
+    const unitPrice = Number(item.unitPrice) || 0;
+    return Number((quantity * unitPrice).toFixed(2));
+  };
+
+  const prepareQuoteItems = (
+    items: Omit<QuoteItem, "id" | "total">[]
+  ): QuoteItem[] => {
+    return items.map((item) => ({
+      ...item,
+      id: item.id || crypto.randomUUID(),
+      total: calculateItemTotal(item),
+    }));
+  };
+
   const handleCreateQuote = async (data: QuoteFormData) => {
     const client = getClientById(data.clientId);
     if (!client) {
@@ -25,10 +56,20 @@ export const QuotesPage: React.FC = () => {
     }
 
     try {
-      const newQuote = addQuote({
+      const completeItems = prepareQuoteItems(data.items);
+      const total = completeItems.reduce((sum, item) => sum + item.total, 0);
+
+      const quoteData = {
         ...data,
         client,
-      });
+        items: completeItems,
+        total,
+        status: "draft",
+        date: new Date().toISOString(),
+        number: generateQuoteNumber(),
+      };
+
+      const newQuote = addQuote(quoteData);
 
       setIsModalOpen(false);
       setShowSuccess(true);
@@ -55,10 +96,17 @@ export const QuotesPage: React.FC = () => {
     }
 
     try {
-      updateQuote(selectedQuote.id, {
+      const completeItems = prepareQuoteItems(data.items);
+      const total = completeItems.reduce((sum, item) => sum + item.total, 0);
+
+      const updateData = {
         ...data,
         client,
-      });
+        items: completeItems,
+        total,
+      };
+
+      updateQuote(selectedQuote.id, updateData);
 
       setIsModalOpen(false);
       setSelectedQuote(null);
@@ -122,3 +170,5 @@ export const QuotesPage: React.FC = () => {
     </div>
   );
 };
+
+export default QuotesPage;

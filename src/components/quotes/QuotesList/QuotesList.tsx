@@ -20,7 +20,7 @@ export const QuotesList: React.FC = () => {
     dateRange: "all",
   });
 
-  // Logique de filtrage existante
+  // Logique de filtrage
   const filteredQuotes = quotes.filter((quote) => {
     const searchTerm = filters.search.toLowerCase();
     const matchesSearch =
@@ -34,7 +34,6 @@ export const QuotesList: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // Gestion des sélections et suppressions (code existant)
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       setSelectedQuotes(filteredQuotes.map((quote) => quote.id));
@@ -69,7 +68,14 @@ export const QuotesList: React.FC = () => {
     }
   };
 
-  // Colonnes adaptatives pour différentes tailles d'écran
+  const handleEdit = (quote: Quote) => {
+    if (typeof window !== "undefined") {
+      const event = new CustomEvent("editQuote", { detail: quote });
+      window.dispatchEvent(event);
+    }
+  };
+
+  // Colonnes adaptatives
   const columns = [
     {
       header: (
@@ -89,7 +95,7 @@ export const QuotesList: React.FC = () => {
           className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
         />
       ),
-      className: "w-12 hidden sm:table-cell", // Masqué sur mobile
+      className: "w-12 hidden sm:table-cell",
     },
     {
       header: "Numéro",
@@ -99,12 +105,12 @@ export const QuotesList: React.FC = () => {
     {
       header: "Client",
       accessor: (quote: Quote) => quote.client.name,
-      className: "hidden sm:table-cell", // Masqué sur mobile
+      className: "hidden sm:table-cell",
     },
     {
       header: "Date",
       accessor: (quote: Quote) => formatDate(quote.date),
-      className: "hidden md:table-cell", // Masqué sur mobile et petite tablette
+      className: "hidden md:table-cell",
     },
     {
       header: "Montant TTC",
@@ -114,7 +120,7 @@ export const QuotesList: React.FC = () => {
     {
       header: "Statut",
       accessor: (quote: Quote) => <QuoteStatusBadge status={quote.status} />,
-      className: "hidden sm:table-cell", // Masqué sur mobile
+      className: "hidden sm:table-cell",
     },
     {
       header: "Actions",
@@ -122,14 +128,13 @@ export const QuotesList: React.FC = () => {
         <QuoteActions
           quote={quote}
           onStatusChange={() => {}}
-          onEdit={() => {}}
+          onEdit={() => handleEdit(quote)}
         />
       ),
       className: "text-right",
     },
   ];
 
-  // Composant carte pour l'affichage mobile
   const MobileQuoteCard = ({ quote }: { quote: Quote }) => (
     <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm space-y-2 sm:hidden">
       <div className="flex justify-between items-start">
@@ -151,7 +156,7 @@ export const QuotesList: React.FC = () => {
         <QuoteActions
           quote={quote}
           onStatusChange={() => {}}
-          onEdit={() => {}}
+          onEdit={() => handleEdit(quote)}
         />
       </div>
     </div>
@@ -187,12 +192,10 @@ export const QuotesList: React.FC = () => {
         </div>
       )}
 
-      {/* Table pour tablette et desktop */}
       <div className="hidden sm:block bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
         <Table columns={columns} data={filteredQuotes} />
       </div>
 
-      {/* Cards pour mobile */}
       <div className="sm:hidden space-y-4">
         {filteredQuotes.map((quote) => (
           <MobileQuoteCard key={quote.id} quote={quote} />
