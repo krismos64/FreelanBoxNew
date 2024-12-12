@@ -1,7 +1,7 @@
-import React from 'react';
-import { ClientSelect } from '@/components/forms/shared/ClientSelect';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import React from "react";
+import { ClientSelect } from "@/components/forms/shared/ClientSelect";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface StatisticsFiltersProps {
   dateRange: [Date, Date];
@@ -26,14 +26,18 @@ export const StatisticsFilters: React.FC<StatisticsFiltersProps> = ({
           <div className="flex space-x-4">
             <input
               type="date"
-              value={format(dateRange[0], 'yyyy-MM-dd')}
-              onChange={(e) => onDateRangeChange([new Date(e.target.value), dateRange[1]])}
+              value={format(dateRange[0], "yyyy-MM-dd")}
+              onChange={(e) =>
+                onDateRangeChange([new Date(e.target.value), dateRange[1]])
+              }
               className="block w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white sm:text-sm"
             />
             <input
               type="date"
-              value={format(dateRange[1], 'yyyy-MM-dd')}
-              onChange={(e) => onDateRangeChange([dateRange[0], new Date(e.target.value)])}
+              value={format(dateRange[1], "yyyy-MM-dd")}
+              onChange={(e) =>
+                onDateRangeChange([dateRange[0], new Date(e.target.value)])
+              }
               className="block w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white sm:text-sm"
             />
           </div>

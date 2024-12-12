@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -8,11 +8,12 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-import { formatCurrency } from '@/utils/format';
-import { useThemeStore } from '@/store/themeStore';
+  Filler,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
+import { formatCurrency } from "@/utils/format";
+import { useThemeStore } from "@/store/themeStore";
+import { parseISO } from "date-fns";
 
 ChartJS.register(
   CategoryScale,
@@ -33,20 +34,23 @@ interface RevenueChartProps {
   className?: string;
 }
 
-export const RevenueChart: React.FC<RevenueChartProps> = ({ data, className }) => {
+export const RevenueChart: React.FC<RevenueChartProps> = ({
+  data,
+  className,
+}) => {
   const chartRef = useRef<ChartJS>(null);
   const { isDarkMode } = useThemeStore();
 
   const gradientColors = {
     light: {
-      start: 'rgba(99, 102, 241, 0.5)',
-      middle: 'rgba(99, 102, 241, 0.25)',
-      end: 'rgba(99, 102, 241, 0.0)',
+      start: "rgba(99, 102, 241, 0.5)",
+      middle: "rgba(99, 102, 241, 0.25)",
+      end: "rgba(99, 102, 241, 0.0)",
     },
     dark: {
-      start: 'rgba(99, 102, 241, 0.3)',
-      middle: 'rgba(99, 102, 241, 0.15)',
-      end: 'rgba(99, 102, 241, 0.0)',
+      start: "rgba(99, 102, 241, 0.3)",
+      middle: "rgba(99, 102, 241, 0.15)",
+      end: "rgba(99, 102, 241, 0.0)",
     },
   };
 
@@ -56,26 +60,33 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data, className }) =
       const ctx = chart.ctx;
       const gradient = ctx.createLinearGradient(0, 0, 0, chart.height);
       const colors = isDarkMode ? gradientColors.dark : gradientColors.light;
-      
+
       gradient.addColorStop(0, colors.start);
       gradient.addColorStop(0.5, colors.middle);
       gradient.addColorStop(1, colors.end);
-      
+
       chart.data.datasets[0].backgroundColor = gradient;
       chart.update();
     }
   }, [isDarkMode]);
 
+  // Trier les données chronologiquement
+  const sortedData = [...data].sort((a, b) => {
+    const dateA = parseISO(a.month);
+    const dateB = parseISO(b.month);
+    return dateA.getTime() - dateB.getTime();
+  });
+
   const chartData = {
-    labels: data.map(item => item.month),
+    labels: sortedData.map((item) => item.month),
     datasets: [
       {
-        label: 'Chiffre d\'affaires',
-        data: data.map(item => item.amount),
-        borderColor: 'rgb(99, 102, 241)',
+        label: "Chiffre d'affaires",
+        data: sortedData.map((item) => item.amount),
+        borderColor: "rgb(99, 102, 241)",
         borderWidth: 3,
-        pointBackgroundColor: 'rgb(99, 102, 241)',
-        pointBorderColor: isDarkMode ? '#1f2937' : '#ffffff',
+        pointBackgroundColor: "rgb(99, 102, 241)",
+        pointBorderColor: isDarkMode ? "#1f2937" : "#ffffff",
         pointBorderWidth: 2,
         pointRadius: 6,
         pointHoverRadius: 8,
@@ -90,11 +101,11 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data, className }) =
     maintainAspectRatio: false,
     animation: {
       duration: 2000,
-      easing: 'easeInOutQuart',
+      easing: "easeInOutQuart",
     },
     interaction: {
-      mode: 'nearest' as const,
-      axis: 'x' as const,
+      mode: "nearest" as const,
+      axis: "x" as const,
       intersect: false,
     },
     plugins: {
@@ -102,10 +113,10 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data, className }) =
         display: false,
       },
       tooltip: {
-        backgroundColor: isDarkMode ? '#374151' : '#ffffff',
-        titleColor: isDarkMode ? '#ffffff' : '#111827',
-        bodyColor: isDarkMode ? '#ffffff' : '#111827',
-        borderColor: isDarkMode ? '#4B5563' : '#E5E7EB',
+        backgroundColor: isDarkMode ? "#374151" : "#ffffff",
+        titleColor: isDarkMode ? "#ffffff" : "#111827",
+        bodyColor: isDarkMode ? "#ffffff" : "#111827",
+        borderColor: isDarkMode ? "#4B5563" : "#E5E7EB",
         borderWidth: 1,
         padding: 12,
         boxPadding: 6,
@@ -121,21 +132,21 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data, className }) =
           display: false,
         },
         ticks: {
-          color: isDarkMode ? '#9CA3AF' : '#6B7280',
+          color: isDarkMode ? "#9CA3AF" : "#6B7280",
           font: {
-            family: 'SF Pro Display',
+            family: "SF Pro Display",
           },
         },
       },
       y: {
         beginAtZero: true,
         grid: {
-          color: isDarkMode ? '#374151' : '#F3F4F6',
+          color: isDarkMode ? "#374151" : "#F3F4F6",
         },
         ticks: {
-          color: isDarkMode ? '#9CA3AF' : '#6B7280',
+          color: isDarkMode ? "#9CA3AF" : "#6B7280",
           font: {
-            family: 'SF Pro Display',
+            family: "SF Pro Display",
           },
           callback: (value: number) => formatCurrency(value),
         },
