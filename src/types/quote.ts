@@ -1,4 +1,12 @@
-export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected';
+export type QuoteStatus = "draft" | "sent" | "accepted" | "rejected";
+
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+}
 
 export interface QuoteItem {
   id: string;
@@ -26,7 +34,7 @@ export interface QuoteFormData {
   clientId: string;
   date: string;
   validUntil: string;
-  items: Omit<QuoteItem, 'id' | 'total'>[];
+  items: Omit<QuoteItem, "id" | "total">[];
   notes?: string;
   termsAndConditions?: string;
 }
