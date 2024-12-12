@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { Client } from '@/types';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { Client } from "@/types";
 
 interface ClientStore {
   clients: Client[];
@@ -8,6 +8,7 @@ interface ClientStore {
   updateClient: (id: string, client: Partial<Client>) => void;
   deleteClients: (ids: string[]) => void;
   getClientById: (id: string) => Client | undefined;
+  updateClientRevenue: (clientId: string, revenue: number) => void;
 }
 
 export const useClientStore = create<ClientStore>()(
@@ -27,9 +28,17 @@ export const useClientStore = create<ClientStore>()(
           clients: state.clients.filter((client) => !ids.includes(client.id)),
         })),
       getClientById: (id) => get().clients.find((client) => client.id === id),
+      updateClientRevenue: (clientId, revenue) =>
+        set((state) => ({
+          clients: state.clients.map((client) =>
+            client.id === clientId
+              ? { ...client, revenue: (client.revenue || 0) + revenue }
+              : client
+          ),
+        })),
     }),
     {
-      name: 'clients-storage',
+      name: "clients-storage",
     }
   )
 );

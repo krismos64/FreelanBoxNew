@@ -11,6 +11,12 @@ import { formatDate, formatCurrency } from "@/utils/format";
 import { toast } from "react-hot-toast";
 import type { Invoice } from "@/types/invoice";
 
+type Column<T> = {
+  header: string | JSX.Element;
+  accessor: keyof T | ((row: T) => JSX.Element | string);
+  className?: string;
+};
+
 export const InvoicesList: React.FC = () => {
   const { invoices, deleteInvoices } = useInvoiceStore();
   const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
@@ -20,22 +26,42 @@ export const InvoicesList: React.FC = () => {
     dateRange: "all",
   });
 
-  const filteredInvoices = invoices.filter((invoice) => {
-    if (!invoice.client?.name) {
-      console.warn(`Invoice ${invoice.number} has missing client data`);
-      return false;
-    }
-    const searchTerm = filters.search.toLowerCase();
-    const matchesSearch =
-      searchTerm === "" ||
-      invoice.number.toLowerCase().includes(searchTerm) ||
-      invoice.client.name.toLowerCase().includes(searchTerm);
+  const generateInvoiceNumber = (index: number) => `INV-${Date.now()}-${index}`;
 
-    const matchesStatus =
-      filters.status === "all" || invoice.status === filters.status;
+  const filteredInvoices = invoices
+    .map((invoice, index) => {
+      const items =
+        invoice.items?.map((item) => ({
+          ...item,
+          total: Number(item.unitPrice || 0) * Number(item.quantity || 0),
+        })) || [];
 
-    return matchesSearch && matchesStatus;
-  });
+      const total = items.reduce((sum, item) => sum + item.total, 0);
+
+      return {
+        ...invoice,
+        id: invoice.id || `temp-id-${index}`, // Ensure each invoice has a unique ID
+        number: invoice.number || generateInvoiceNumber(index), // Generate the number if absent
+        total, // Total final for the invoice
+        items, // Items with their calculated totals
+      };
+    })
+    .filter((invoice) => {
+      if (!invoice.client?.name) {
+        console.warn(`Invoice ${invoice.number} has missing client data`);
+        return false;
+      }
+      const searchTerm = filters.search.toLowerCase();
+      const matchesSearch =
+        searchTerm === "" ||
+        invoice.number.toLowerCase().includes(searchTerm) ||
+        invoice.client.name.toLowerCase().includes(searchTerm);
+
+      const matchesStatus =
+        filters.status === "all" || invoice.status === filters.status;
+
+      return matchesSearch && matchesStatus;
+    });
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -73,7 +99,7 @@ export const InvoicesList: React.FC = () => {
     }
   };
 
-  const columns = [
+  const columns: Column<Invoice>[] = [
     {
       header: (
         <input
@@ -83,7 +109,7 @@ export const InvoicesList: React.FC = () => {
           className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
         />
       ),
-      accessor: (invoice: Invoice) => (
+      accessor: (invoice) => (
         <input
           type="checkbox"
           checked={selectedInvoices.includes(invoice.id)}
@@ -92,7 +118,7 @@ export const InvoicesList: React.FC = () => {
           className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
         />
       ),
-      className: "w-12 hidden sm:table-cell", // Masqué sur mobile
+      className: "w-12 hidden sm:table-cell",
     },
     {
       header: "Numéro",
@@ -101,36 +127,38 @@ export const InvoicesList: React.FC = () => {
     },
     {
       header: "Client",
-      accessor: (invoice: Invoice) => invoice.client?.name ?? "Client inconnu",
-      className: "hidden sm:table-cell", // Masqué sur mobile
+      accessor: (invoice) => invoice.client?.name ?? "Client inconnu",
+      className: "hidden sm:table-cell",
     },
     {
       header: "Date",
-      accessor: (invoice: Invoice) => formatDate(invoice.date),
-      className: "hidden md:table-cell", // Masqué sur mobile et tablette
+      accessor: (invoice) => formatDate(invoice.date),
+      className: "hidden md:table-cell",
     },
     {
       header: "Échéance",
-      accessor: (invoice: Invoice) => formatDate(invoice.dueDate),
-      className: "hidden lg:table-cell", // Visible uniquement sur desktop
+      accessor: (invoice) => formatDate(invoice.dueDate),
+      className: "hidden lg:table-cell",
     },
     {
       header: "Montant TTC",
-      accessor: (invoice: Invoice) => formatCurrency(invoice.total),
+      accessor: (invoice) => formatCurrency(invoice.total),
       className: "text-right",
     },
     {
       header: "Statut",
-      accessor: (invoice: Invoice) => (
-        <InvoiceStatusBadge status={invoice.status} />
-      ),
-      className: "hidden sm:table-cell", // Masqué sur mobile
+      accessor: (invoice) => <InvoiceStatusBadge status={invoice.status} />,
+      className: "hidden sm:table-cell",
     },
     {
       header: "Actions",
-      accessor: (invoice: Invoice) => (
+      accessor: (invoice) => (
         <InvoiceActions
+          key={invoice.id}
           invoice={invoice}
+          onEdit={() => {
+            /* Add edit logic here */
+          }}
           onStatusChange={() => {
             // Refresh if needed
           }}
@@ -139,7 +167,7 @@ export const InvoicesList: React.FC = () => {
       className: "text-right",
     },
   ];
-  // Vue mobile pour chaque facture
+
   const MobileInvoiceCard = ({ invoice }: { invoice: Invoice }) => (
     <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm space-y-2 sm:hidden">
       <div className="flex justify-between items-start">
@@ -157,8 +185,21 @@ export const InvoicesList: React.FC = () => {
         </div>
         <div className="font-medium">{formatCurrency(invoice.total)}</div>
       </div>
+      <div className="text-sm text-gray-500 dark:text-gray-400">
+        {invoice.items?.map((item) => (
+          <div key={item.id}>
+            {item.description}: {formatCurrency(item.total)}
+          </div>
+        ))}
+      </div>
       <div className="flex justify-end pt-2">
-        <InvoiceActions invoice={invoice} onStatusChange={() => {}} />
+        <InvoiceActions
+          invoice={invoice}
+          onEdit={() => {
+            /* Add edit logic here */
+          }}
+          onStatusChange={() => {}}
+        />
       </div>
     </div>
   );
@@ -194,12 +235,10 @@ export const InvoicesList: React.FC = () => {
         </div>
       )}
 
-      {/* Table pour tablette et desktop */}
       <div className="hidden sm:block bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
         <Table columns={columns} data={filteredInvoices} />
       </div>
 
-      {/* Cards pour mobile */}
       <div className="sm:hidden space-y-4">
         {filteredInvoices.map((invoice) => (
           <MobileInvoiceCard key={invoice.id} invoice={invoice} />

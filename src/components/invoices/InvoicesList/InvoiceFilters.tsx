@@ -1,7 +1,7 @@
-import React from 'react';
-import { Input } from '@/components/ui/Input';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import type { InvoiceStatus } from '@/types/invoice';
+import React from "react";
+import { Input } from "@/components/ui/Input";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import type { InvoiceStatus } from "@/types/invoice";
 
 interface InvoiceFiltersProps {
   filters: {
@@ -20,12 +20,11 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
     onChange({ ...filters, [key]: value });
   };
 
-  const statuses: { value: InvoiceStatus | 'all'; label: string }[] = [
-    { value: 'all', label: 'Tous les statuts' },
-    { value: 'draft', label: 'Brouillons' },
-    { value: 'sent', label: 'Envoyées' },
-    { value: 'paid', label: 'Payées' },
-    { value: 'overdue', label: 'En retard' },
+  const statuses: { value: InvoiceStatus | "all"; label: string }[] = [
+    { value: "all", label: "Tous les statuts" },
+    { value: "draft", label: "Brouillons" },
+    { value: "sent", label: "Envoyées" },
+    { value: "paid", label: "Payées" },
   ];
 
   return (
@@ -37,7 +36,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
         <input
           type="text"
           value={filters.search}
-          onChange={(e) => handleChange('search', e.target.value)}
+          onChange={(e) => handleChange("search", e.target.value)}
           placeholder="Rechercher une facture..."
           className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         />
@@ -45,7 +44,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
 
       <select
         value={filters.status}
-        onChange={(e) => handleChange('status', e.target.value)}
+        onChange={(e) => handleChange("status", e.target.value)}
         className="block w-full sm:w-48 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
       >
         {statuses.map((status) => (
