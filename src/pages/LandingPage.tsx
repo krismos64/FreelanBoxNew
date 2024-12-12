@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import Lottie from "lottie-react";
+import { Modal } from "@/components/ui/Modal";
 import welcomeAnimation from "@/animations/welcome.json";
+import playButtonAnimation from "@/animations/play-button.json";
 import { Button } from "@/components/ui/Button";
 import {
   ChartBarIcon,
@@ -16,6 +18,7 @@ import {
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const [showVideo, setShowVideo] = useState(false);
 
   const [ref, inView] = useInView({
     triggerOnce: true,
@@ -118,8 +121,47 @@ export const LandingPage: React.FC = () => {
         </motion.div>
       </div>
 
+      {/* Video Section */}
+      <div className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+              Découvrez notre vidéo de présentation
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Regardez comment FreelanceBox peut vous aider à gérer votre
+              activité
+            </p>
+          </motion.div>
+
+          {/* Animation Lottie en tant que bouton */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex justify-center mb-12"
+          >
+            <div
+              className="cursor-pointer w-48 h-48 hover:scale-105 transition-transform duration-300"
+              onClick={() => setShowVideo(true)}
+            >
+              <Lottie
+                animationData={playButtonAnimation}
+                loop={true}
+                className="w-full h-full"
+              />
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
       {/* Features Section */}
-      <div ref={ref} className="py-24 bg-gray-50">
+      <div ref={ref} className="py-8 bg-gray-50">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -146,11 +188,32 @@ export const LandingPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Video Modal */}
+      <Modal
+        isOpen={showVideo}
+        onClose={() => setShowVideo(false)}
+        title="Présentation de FreelanceBox"
+      >
+        <div className="aspect-video">
+          <iframe
+            width="100%"
+            height="100%"
+            src="https://www.youtube.com/embed/VOTRE_VIDEO_ID?autoplay=1"
+            title="Présentation de FreelanceBox"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="rounded-lg"
+          />
+        </div>
+      </Modal>
+
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-8">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm text-gray-400">
             © {new Date().getFullYear()} FreelanceBox. Tous droits réservés.
+            Chrsitophe Mostefaoui.
           </p>
         </div>
       </footer>
