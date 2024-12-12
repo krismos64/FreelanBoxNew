@@ -48,6 +48,10 @@ export const QuotesPage: React.FC = () => {
     }));
   };
 
+  const generateQuoteNumber = () => {
+    return `QUOTE-${Date.now()}`;
+  };
+
   const handleCreateQuote = async (data: QuoteFormData) => {
     const client = getClientById(data.clientId);
     if (!client) {

@@ -146,10 +146,13 @@ export const useInvoiceStore = create<InvoiceStore>()(
         // Trouver le dernier numéro utilisé
         let maxNumber = state.settings.nextNumber;
         state.invoices.forEach((invoice) => {
-          const match = invoice.number.match(/\d+$/);
-          if (match) {
-            const num = parseInt(match[0], 10);
-            maxNumber = Math.max(maxNumber, num + 1);
+          if (invoice.number) {
+            // Vérifie que le numéro existe
+            const match = invoice.number.match(/\d+$/);
+            if (match) {
+              const num = parseInt(match[0], 10);
+              maxNumber = Math.max(maxNumber, num + 1);
+            }
           }
         });
 
