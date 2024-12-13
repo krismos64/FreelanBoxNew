@@ -70,6 +70,11 @@ export const InvoicesPage: React.FC = () => {
     }
   };
 
+  const handleEdit = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setIsModalOpen(true);
+  };
+
   return (
     <div className="p-6 h-screen overflow-y-auto bg-gray-50 dark:bg-gray-900">
       <PageHeader
@@ -82,7 +87,7 @@ export const InvoicesPage: React.FC = () => {
       />
 
       <div className="max-w-screen-lg mx-auto">
-        <InvoicesList />
+        <InvoicesList onEdit={handleEdit} />
       </div>
 
       <Modal

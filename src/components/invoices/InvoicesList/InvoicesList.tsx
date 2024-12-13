@@ -17,7 +17,11 @@ type Column<T> = {
   className?: string;
 };
 
-export const InvoicesList: React.FC = () => {
+interface InvoicesListProps {
+  onEdit: (invoice: Invoice) => void;
+}
+
+export const InvoicesList: React.FC<InvoicesListProps> = ({ onEdit }) => {
   const { invoices, deleteInvoices } = useInvoiceStore();
   const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
   const [filters, setFilters] = useState({
@@ -40,10 +44,10 @@ export const InvoicesList: React.FC = () => {
 
       return {
         ...invoice,
-        id: invoice.id || `temp-id-${index}`, // Ensure each invoice has a unique ID
-        number: invoice.number || generateInvoiceNumber(index), // Generate the number if absent
-        total, // Total final for the invoice
-        items, // Items with their calculated totals
+        id: invoice.id || `temp-id-${index}`,
+        number: invoice.number || generateInvoiceNumber(index),
+        total,
+        items,
       };
     })
     .filter((invoice) => {
@@ -156,9 +160,7 @@ export const InvoicesList: React.FC = () => {
         <InvoiceActions
           key={invoice.id}
           invoice={invoice}
-          onEdit={() => {
-            /* Add edit logic here */
-          }}
+          onEdit={() => onEdit(invoice)}
           onStatusChange={() => {
             // Refresh if needed
           }}
@@ -195,9 +197,7 @@ export const InvoicesList: React.FC = () => {
       <div className="flex justify-end pt-2">
         <InvoiceActions
           invoice={invoice}
-          onEdit={() => {
-            /* Add edit logic here */
-          }}
+          onEdit={() => onEdit(invoice)}
           onStatusChange={() => {}}
         />
       </div>
