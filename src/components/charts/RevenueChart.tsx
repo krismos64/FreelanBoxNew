@@ -13,7 +13,6 @@ import {
 import { Line } from "react-chartjs-2";
 import { formatCurrency } from "@/utils/format";
 import { useThemeStore } from "@/store/themeStore";
-import { parseISO } from "date-fns";
 
 ChartJS.register(
   CategoryScale,
@@ -38,7 +37,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({
   data,
   className,
 }) => {
-  const chartRef = useRef<ChartJS>(null);
+  const chartRef = useRef<ChartJS<"line">>(null);
   const { isDarkMode } = useThemeStore();
 
   const gradientColors = {
@@ -70,19 +69,15 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({
     }
   }, [isDarkMode]);
 
-  // Trier les données chronologiquement
-  const sortedData = [...data].sort((a, b) => {
-    const dateA = parseISO(a.month);
-    const dateB = parseISO(b.month);
-    return dateA.getTime() - dateB.getTime();
-  });
+  // Inverser simplement les données
+  const reversedData = [...data].reverse();
 
   const chartData = {
-    labels: sortedData.map((item) => item.month),
+    labels: reversedData.map((item) => item.month),
     datasets: [
       {
         label: "Chiffre d'affaires",
-        data: sortedData.map((item) => item.amount),
+        data: reversedData.map((item) => item.amount),
         borderColor: "rgb(99, 102, 241)",
         borderWidth: 3,
         pointBackgroundColor: "rgb(99, 102, 241)",
@@ -101,7 +96,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({
     maintainAspectRatio: false,
     animation: {
       duration: 2000,
-      easing: "easeInOutQuart",
+      easing: "easeInQuad" as const,
     },
     interaction: {
       mode: "nearest" as const,
@@ -148,7 +143,9 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({
           font: {
             family: "SF Pro Display",
           },
-          callback: (value: number) => formatCurrency(value),
+          callback: function (value: number | string): string {
+            return formatCurrency(value as number);
+          },
         },
       },
     },
