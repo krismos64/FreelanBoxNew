@@ -207,12 +207,64 @@ const generateItemsTable = (
   return (doc as any).lastAutoTable.finalY;
 };
 
+const generateNotesAndTerms = (
+  doc: jsPDF,
+  notes: string | undefined,
+  terms: string | undefined,
+  startY: number
+): number => {
+  let currentY = startY + 30; // Espace après le tableau
+
+  if (notes) {
+    // Section Notes
+    doc.setFont(STYLE.fonts.bold);
+    doc.setFontSize(STYLE.sizes.normal);
+    doc.setTextColor(...STYLE.colors.primarySolid);
+    doc.text("Notes", STYLE.margins.page, currentY);
+
+    doc.setFont(STYLE.fonts.normal);
+    doc.setTextColor(...STYLE.colors.text);
+    const splitNotes = doc.splitTextToSize(
+      notes,
+      doc.internal.pageSize.width - 2 * STYLE.margins.page
+    );
+    currentY += 7;
+    doc.text(splitNotes, STYLE.margins.page, currentY);
+    currentY += splitNotes.length * 7;
+  }
+
+  if (terms) {
+    // Section Conditions et mentions légales
+    currentY += 10; // Espace entre les sections
+    doc.setFont(STYLE.fonts.bold);
+    doc.setFontSize(STYLE.sizes.normal);
+    doc.setTextColor(...STYLE.colors.primarySolid);
+    doc.text("Conditions et mentions légales", STYLE.margins.page, currentY);
+
+    doc.setFont(STYLE.fonts.normal);
+    doc.setTextColor(...STYLE.colors.text);
+    const splitTerms = doc.splitTextToSize(
+      terms,
+      doc.internal.pageSize.width - 2 * STYLE.margins.page
+    );
+    currentY += 7;
+    doc.text(splitTerms, STYLE.margins.page, currentY);
+    currentY += splitTerms.length * 7;
+  }
+
+  return currentY;
+};
+
 const generateFooter = (
   doc: jsPDF,
   companyInfo: any,
   total: number,
-  tableEndY: number
+  tableEndY: number,
+  notes?: string,
+  terms?: string
 ): void => {
+  let currentY = tableEndY;
+
   // Total
   doc.setFont(STYLE.fonts.bold);
   doc.setFontSize(STYLE.sizes.subtitle);
@@ -220,19 +272,14 @@ const generateFooter = (
   doc.text(
     `Total TTC : ${formatCurrency(total)}`,
     doc.internal.pageSize.width - 20,
-    tableEndY + 15,
+    currentY + 15,
     { align: "right" }
   );
 
-  // TVA
-  doc.setFont(STYLE.fonts.normal, "italic");
-  doc.setFontSize(STYLE.sizes.normal);
-  doc.setTextColor(...STYLE.colors.text);
-  doc.text(
-    "TVA non applicable, article 293 B du CGI",
-    STYLE.margins.page,
-    tableEndY + 15
-  );
+  // Si nous avons des notes ou des conditions, les ajouter avant le total
+  if (notes || terms) {
+    currentY = generateNotesAndTerms(doc, notes, terms, tableEndY);
+  }
 
   // Footer avec fond bleu transparent
   const footerY = doc.internal.pageSize.height - 25;
@@ -280,7 +327,14 @@ export const generateQuotePDF = (quote: Quote, companyInfo: any): jsPDF => {
 
   const clientEndY = generateClientSection(doc, quote.client, headerEndY);
   const tableEndY = generateItemsTable(doc, quote.items, clientEndY);
-  generateFooter(doc, companyInfo, quote.total, tableEndY);
+  generateFooter(
+    doc,
+    companyInfo,
+    quote.total,
+    tableEndY,
+    quote.notes,
+    quote.termsAndConditions
+  );
 
   return doc;
 };
@@ -308,7 +362,14 @@ export const generateInvoicePDF = (
 
   const clientEndY = generateClientSection(doc, invoice.client, headerEndY);
   const tableEndY = generateItemsTable(doc, invoice.items, clientEndY);
-  generateFooter(doc, companyInfo, invoice.total, tableEndY);
+  generateFooter(
+    doc,
+    companyInfo,
+    invoice.total,
+    tableEndY,
+    invoice.notes,
+    invoice.termsAndConditions
+  );
 
   return doc;
 };
