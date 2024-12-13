@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,7 +14,6 @@ const eventSchema = z.object({
   end: z.string().min(1, "La date de fin est requise"),
   color: z.string().optional(),
   reminder: z.number().min(0).optional(),
-  category: z.string().optional(),
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -63,24 +62,25 @@ export const EventForm: React.FC<EventFormProps> = ({
         error={errors.description?.message}
       />
       <div className="grid grid-cols-2 gap-4">
-        <Input
-          label="Début"
-          type="datetime-local"
-          {...register("start")}
-          error={errors.start?.message}
-        />
-        <Input
-          label="Fin"
-          type="datetime-local"
-          {...register("end")}
-          error={errors.end?.message}
-        />
+        <div className="relative">
+          <Input
+            label="Début"
+            type="datetime-local"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            {...register("start")}
+            error={errors.start?.message}
+          />
+        </div>
+        <div className="relative">
+          <Input
+            label="Fin"
+            type="datetime-local"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            {...register("end")}
+            error={errors.end?.message}
+          />
+        </div>
       </div>
-      <Input
-        label="Catégorie"
-        {...register("category")}
-        error={errors.category?.message}
-      />
       <Input
         label="Couleur"
         type="color"
@@ -95,7 +95,6 @@ export const EventForm: React.FC<EventFormProps> = ({
       />
 
       <div className="flex justify-end space-x-3">
-        {/* Bouton de suppression, visible uniquement en mode édition */}
         {initialData && onDelete && (
           <Button type="button" variant="danger" onClick={handleDelete}>
             Supprimer
@@ -106,17 +105,54 @@ export const EventForm: React.FC<EventFormProps> = ({
         </Button>
       </div>
 
-      <style>
-        {`
-          .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-          }
-          .dark input[type="number"]::-webkit-inner-spin-button,
-          .dark input[type="number"]::-webkit-outer-spin-button {
-            filter: invert(1);
-          }
-        `}
-      </style>
+      <style jsx global>{`
+        input[type="datetime-local"] {
+          position: relative;
+          cursor: pointer;
+          min-height: 38px;
+          padding-right: 30px;
+          color: inherit;
+          background-color: inherit;
+        }
+
+        /* Styles pour le mode clair */
+        input[type="datetime-local"] {
+          font-size: 14px;
+          line-height: 1.5;
+        }
+
+        /* Amélioration de l'apparence du sélecteur de date/heure */
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+          position: absolute;
+          right: 8px;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 4px;
+          background-color: transparent;
+        }
+
+        /* Styles pour le mode sombre */
+        .dark input[type="datetime-local"] {
+          color-scheme: dark;
+        }
+
+        .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+          filter: invert(1);
+        }
+
+        .dark input[type="number"]::-webkit-inner-spin-button,
+        .dark input[type="number"]::-webkit-outer-spin-button {
+          filter: invert(1);
+        }
+
+        /* Assurer que le texte reste dans le cadre */
+        input[type="datetime-local"],
+        input[type="number"] {
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
+        }
+      `}</style>
     </form>
   );
 };
