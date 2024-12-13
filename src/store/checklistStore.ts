@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export interface ChecklistItem {
   id: string;
@@ -14,6 +14,7 @@ interface ChecklistStore {
   updateItem: (id: string, updates: Partial<ChecklistItem>) => void;
   deleteItem: (id: string) => void;
   toggleItem: (id: string) => void;
+  reorderItems: (newItems: ChecklistItem[]) => void;
 }
 
 export const useChecklistStore = create<ChecklistStore>()(
@@ -48,9 +49,13 @@ export const useChecklistStore = create<ChecklistStore>()(
             item.id === id ? { ...item, completed: !item.completed } : item
           ),
         })),
+      reorderItems: (newItems) =>
+        set(() => ({
+          items: newItems,
+        })),
     }),
     {
-      name: 'checklist-storage',
+      name: "checklist-storage",
     }
   )
 );
