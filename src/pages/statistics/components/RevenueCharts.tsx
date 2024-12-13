@@ -68,15 +68,37 @@ export const RevenueCharts: React.FC<RevenueChartsProps> = ({
     }
   }, [isDarkMode]);
 
-  // Inverser les données
-  const reversedData = [...monthlyData].reverse();
+  // Fonction pour convertir le mois en format Date
+  const parseMonth = (monthStr: string) => {
+    const [monthName, year] = monthStr.split(" ");
+    const monthMap: { [key: string]: number } = {
+      janvier: 0,
+      février: 1,
+      mars: 2,
+      avril: 3,
+      mai: 4,
+      juin: 5,
+      juillet: 6,
+      août: 7,
+      septembre: 8,
+      octobre: 9,
+      novembre: 10,
+      décembre: 11,
+    };
+    return new Date(parseInt(year), monthMap[monthName.toLowerCase()]);
+  };
+
+  // Trier les données chronologiquement
+  const sortedData = [...monthlyData].sort((a, b) => {
+    return parseMonth(a.month).getTime() - parseMonth(b.month).getTime();
+  });
 
   const data = {
-    labels: reversedData.map((item) => item.month),
+    labels: sortedData.map((item) => item.month),
     datasets: [
       {
         label: "Chiffre d'affaires mensuel",
-        data: reversedData.map((item) => item.amount),
+        data: sortedData.map((item) => item.amount),
         borderColor: "rgb(99, 102, 241)",
         borderWidth: 3,
         pointBackgroundColor: "rgb(99, 102, 241)",

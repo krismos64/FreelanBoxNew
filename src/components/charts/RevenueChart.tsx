@@ -33,11 +33,8 @@ interface RevenueChartProps {
   className?: string;
 }
 
-export const RevenueChart: React.FC<RevenueChartProps> = ({
-  data,
-  className,
-}) => {
-  const chartRef = useRef<ChartJS<"line">>(null);
+export const RevenueChart: React.FC = ({ data, className }) => {
+  const chartRef = useRef<ChartJS>(null);
   const { isDarkMode } = useThemeStore();
 
   const gradientColors = {
@@ -59,25 +56,45 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({
       const ctx = chart.ctx;
       const gradient = ctx.createLinearGradient(0, 0, 0, chart.height);
       const colors = isDarkMode ? gradientColors.dark : gradientColors.light;
-
       gradient.addColorStop(0, colors.start);
       gradient.addColorStop(0.5, colors.middle);
       gradient.addColorStop(1, colors.end);
-
       chart.data.datasets[0].backgroundColor = gradient;
       chart.update();
     }
   }, [isDarkMode]);
 
-  // Inverser simplement les données
-  const reversedData = [...data].reverse();
+  // Fonction pour convertir le mois en format Date
+  const parseMonth = (monthStr: string) => {
+    const [monthName, year] = monthStr.split(" ");
+    const monthMap: { [key: string]: number } = {
+      janvier: 0,
+      février: 1,
+      mars: 2,
+      avril: 3,
+      mai: 4,
+      juin: 5,
+      juillet: 6,
+      août: 7,
+      septembre: 8,
+      octobre: 9,
+      novembre: 10,
+      décembre: 11,
+    };
+    return new Date(parseInt(year), monthMap[monthName.toLowerCase()]);
+  };
+
+  // Trier les données chronologiquement
+  const sortedData = [...data].sort((a, b) => {
+    return parseMonth(a.month).getTime() - parseMonth(b.month).getTime();
+  });
 
   const chartData = {
-    labels: reversedData.map((item) => item.month),
+    labels: sortedData.map((item) => item.month),
     datasets: [
       {
         label: "Chiffre d'affaires",
-        data: reversedData.map((item) => item.amount),
+        data: sortedData.map((item) => item.amount),
         borderColor: "rgb(99, 102, 241)",
         borderWidth: 3,
         pointBackgroundColor: "rgb(99, 102, 241)",
@@ -152,8 +169,11 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({
   };
 
   return (
-    <div className={`relative ${className}`}>
-      <Line ref={chartRef} data={chartData} options={chartOptions} />
-    </div>
+    <Line
+      data={chartData}
+      options={chartOptions}
+      ref={chartRef}
+      className={className}
+    />
   );
 };

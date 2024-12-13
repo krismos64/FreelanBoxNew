@@ -1,6 +1,6 @@
-import React from 'react';
-import { ChevronUpDownIcon } from '@heroicons/react/24/outline';
-import type { SortOption } from '@/types';
+import React from "react";
+import { ChevronUpDownIcon } from "@heroicons/react/24/outline";
+import type { SortOption } from "@/types";
 
 interface ClientSortProps {
   value: SortOption;
@@ -19,8 +19,6 @@ export const ClientSort: React.FC<ClientSortProps> = ({ value, onChange }) => {
         <option value="name-desc">Nom (Z-A)</option>
         <option value="date-desc">Plus récent</option>
         <option value="date-asc">Plus ancien</option>
-        <option value="revenue-desc">CA le plus élevé</option>
-        <option value="revenue-asc">CA le plus bas</option>
       </select>
       <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
         <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
