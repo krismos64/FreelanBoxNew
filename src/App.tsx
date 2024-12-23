@@ -8,6 +8,8 @@ import {
 import { Toaster } from "react-hot-toast";
 import { Sidebar } from "./components/layout/Sidebar";
 import { LandingPage } from "./pages/LandingPage";
+import { LoginPage } from "./components/auth/LoginPage";
+import { RegisterPage } from "./components/auth/RegisterPage";
 import { Dashboard } from "./pages/Dashboard";
 import { QuotesPage } from "./pages/quotes/QuotesPage";
 import { ClientsList } from "./pages/clients/ClientsList";
@@ -33,13 +35,16 @@ const App: React.FC = () => {
   return (
     <Router>
       <Routes>
+        {/* Routes publiques */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* Routes protégées */}
         <Route
           path="/*"
           element={
             <div className="flex min-h-screen">
-              {" "}
-              {/* Supprimé la classe dark ici */}
               <Sidebar />
               <main className="flex-1 bg-gray-50 dark:bg-gray-900 desktop-content">
                 <div className="container mx-auto">
@@ -78,4 +83,5 @@ const App: React.FC = () => {
     </Router>
   );
 };
+
 export default App;

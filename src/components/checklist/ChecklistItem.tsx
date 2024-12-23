@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { CheckIcon, PencilIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import type { ChecklistItem as ChecklistItemType } from '@/store/checklistStore';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/input";
+import {
+  CheckIcon,
+  PencilIcon,
+  TrashIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import type { ChecklistItem as ChecklistItemType } from "@/store/checklistStore";
 
 interface ChecklistItemProps {
   item: ChecklistItemType;
@@ -36,7 +41,10 @@ export const ChecklistItem: React.FC<ChecklistItemProps> = ({
   return (
     <div className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg group">
       {isEditing ? (
-        <form onSubmit={handleSubmit} className="flex-1 flex items-center space-x-2">
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 flex items-center space-x-2"
+        >
           <Input
             value={editedTitle}
             onChange={(e) => setEditedTitle(e.target.value)}
@@ -46,7 +54,12 @@ export const ChecklistItem: React.FC<ChecklistItemProps> = ({
           <Button type="submit" size="sm" variant="primary">
             <CheckIcon className="h-4 w-4" />
           </Button>
-          <Button type="button" size="sm" variant="secondary" onClick={handleCancel}>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={handleCancel}
+          >
             <XMarkIcon className="h-4 w-4" />
           </Button>
         </form>
@@ -57,8 +70,8 @@ export const ChecklistItem: React.FC<ChecklistItemProps> = ({
               onClick={onToggle}
               className={`w-5 h-5 rounded border ${
                 item.completed
-                  ? 'bg-primary-500 border-primary-600 text-white'
-                  : 'border-gray-300 dark:border-gray-600'
+                  ? "bg-primary-500 border-primary-600 text-white"
+                  : "border-gray-300 dark:border-gray-600"
               } flex items-center justify-center`}
             >
               {item.completed && <CheckIcon className="w-4 h-4" />}
@@ -66,8 +79,8 @@ export const ChecklistItem: React.FC<ChecklistItemProps> = ({
             <span
               className={`flex-1 ${
                 item.completed
-                  ? 'text-gray-500 dark:text-gray-400 line-through'
-                  : 'text-gray-900 dark:text-white'
+                  ? "text-gray-500 dark:text-gray-400 line-through"
+                  : "text-gray-900 dark:text-white"
               }`}
             >
               {item.title}
@@ -81,11 +94,7 @@ export const ChecklistItem: React.FC<ChecklistItemProps> = ({
             >
               <PencilIcon className="h-4 w-4" />
             </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={onDelete}
-            >
+            <Button variant="danger" size="sm" onClick={onDelete}>
               <TrashIcon className="h-4 w-4" />
             </Button>
           </div>

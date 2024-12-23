@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/Button";
 import { ChecklistItem } from "@/components/checklist/ChecklistItem";
 import { useChecklistStore } from "@/store/checklistStore";

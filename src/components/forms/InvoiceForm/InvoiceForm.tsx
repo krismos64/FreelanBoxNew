@@ -1,7 +1,7 @@
 import React from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/Button";
 import { ClientSelect } from "@/components/forms/shared/ClientSelect";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";

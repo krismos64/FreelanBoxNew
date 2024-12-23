@@ -1,170 +1,191 @@
-import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { z } from 'zod';
-import { AppError } from '../utils/appError';
-import { logger } from '../utils/logger';
+import { PrismaClient } from "@prisma/client";
+import { Request, Response } from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { z } from "zod";
+import AppError from "../utils/appError";
+import { logger as loggerService } from "../utils/logger";
 
 const prisma = new PrismaClient();
 
-const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  name: z.string().min(2)
+// Types
+interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+  createdAt?: Date;
+}
+
+interface LoginResponse {
+  message: string;
+  user: Omit<UserResponse, "createdAt">;
+  accessToken: string;
+  refreshToken: string;
+}
+
+// Schémas de validation
+const loginValidationSchema = z.object({
+  email: z.string().email("Email invalide"),
+  password: z.string().min(1, "Mot de passe requis"),
 });
 
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string()
+const registerValidationSchema = z.object({
+  name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
+  email: z.string().email("Email invalide"),
+  password: z
+    .string()
+    .min(6, "Le mot de passe doit contenir au moins 6 caractères"),
 });
 
-export const register = async (req: Request, res: Response) => {
+const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, name } = registerSchema.parse(req.body);
+    const data = registerValidationSchema.parse(req.body);
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-      throw new AppError('Email already exists', 400);
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name
-      }
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email },
     });
 
-    const accessToken = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET!,
-      { expiresIn: '15m' }
-    );
+    if (existingUser) {
+      throw new AppError("Cet email est déjà utilisé", 400);
+    }
 
-    const refreshToken = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_REFRESH_SECRET!,
-      { expiresIn: '7d' }
-    );
+    const hashedPassword = await bcrypt.hash(data.password, 12);
 
-    await prisma.refreshToken.create({
+    const user = await prisma.user.create({
       data: {
-        token: refreshToken,
-        userId: user.id,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      }
+        name: data.name,
+        email: data.email,
+        password: hashedPassword,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+      },
     });
 
     res.status(201).json({
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name
-      },
-      accessToken,
-      refreshToken
+      message: "Inscription réussie",
+      user,
     });
   } catch (error) {
-    logger.error('Registration error:', error);
+    loggerService.error("Error registering user:", error);
     if (error instanceof z.ZodError) {
-      throw new AppError('Invalid input data', 400);
+      throw new AppError("Données invalides", 400);
     }
     throw error;
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password } = loginSchema.parse(req.body);
+    const data = loginValidationSchema.parse(req.body);
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
     if (!user) {
-      throw new AppError('Invalid credentials', 401);
+      throw new AppError("Email ou mot de passe incorrect", 401);
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(data.password, user.password);
     if (!isValidPassword) {
-      throw new AppError('Invalid credentials', 401);
+      throw new AppError("Email ou mot de passe incorrect", 401);
     }
 
     const accessToken = jwt.sign(
       { userId: user.id },
-      process.env.JWT_SECRET!,
-      { expiresIn: '15m' }
+      process.env.JWT_SECRET as string,
+      { expiresIn: "15m" }
     );
 
-    const refreshToken = jwt.sign(
+    const newRefreshToken = jwt.sign(
       { userId: user.id },
-      process.env.JWT_REFRESH_SECRET!,
-      { expiresIn: '7d' }
+      process.env.JWT_REFRESH_SECRET as string,
+      { expiresIn: "7d" }
     );
 
     await prisma.refreshToken.create({
       data: {
-        token: refreshToken,
+        token: newRefreshToken,
         userId: user.id,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      }
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
     });
 
-    res.json({
+    res.status(200).json({
+      message: "Connexion réussie",
       user: {
         id: user.id,
+        name: user.name,
         email: user.email,
-        name: user.name
       },
       accessToken,
-      refreshToken
+      refreshToken: newRefreshToken,
     });
   } catch (error) {
-    logger.error('Login error:', error);
+    loggerService.error("Error logging in:", error);
     if (error instanceof z.ZodError) {
-      throw new AppError('Invalid input data', 400);
+      throw new AppError("Données invalides", 400);
     }
     throw error;
   }
 };
 
-export const refreshToken = async (req: Request, res: Response) => {
+const refreshUserToken = async (req: Request, res: Response): Promise<void> => {
   try {
     const { refreshToken } = req.body;
 
-    const existingToken = await prisma.refreshToken.findUnique({
-      where: { token: refreshToken }
-    });
-
-    if (!existingToken || existingToken.expiresAt < new Date()) {
-      throw new AppError('Invalid refresh token', 401);
+    if (!refreshToken) {
+      throw new AppError("Refresh token requis", 400);
     }
 
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: string };
-    
+    const storedToken = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken },
+      include: { user: true },
+    });
+
+    if (!storedToken || storedToken.expiresAt < new Date()) {
+      throw new AppError("Token invalide ou expiré", 401);
+    }
+
     const accessToken = jwt.sign(
-      { userId: decoded.userId },
-      process.env.JWT_SECRET!,
-      { expiresIn: '15m' }
+      { userId: storedToken.userId },
+      process.env.JWT_SECRET as string,
+      { expiresIn: "15m" }
     );
 
-    res.json({ accessToken });
+    res.status(200).json({
+      accessToken,
+    });
   } catch (error) {
-    logger.error('Token refresh error:', error);
-    throw new AppError('Invalid refresh token', 401);
+    loggerService.error("Error refreshing token:", error);
+    throw error;
   }
 };
 
-export const logout = async (req: Request, res: Response) => {
+const logoutUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { refreshToken } = req.body;
 
-    await prisma.refreshToken.delete({
-      where: { token: refreshToken }
-    });
+    if (refreshToken) {
+      await prisma.refreshToken.delete({
+        where: { token: refreshToken },
+      });
+    }
 
-    res.status(204).send();
+    res.status(200).json({ message: "Déconnexion réussie" });
   } catch (error) {
-    logger.error('Logout error:', error);
-    throw new AppError('Error during logout', 500);
+    loggerService.error("Error logging out:", error);
+    throw error;
   }
+};
+
+export {
+  registerUser as register,
+  loginUser as login,
+  refreshUserToken as refreshToken,
+  logoutUser as logout,
 };

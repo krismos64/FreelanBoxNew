@@ -1,7 +1,8 @@
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { format } from "date-fns";
-import type { Quote, Invoice } from "@/types";
+import type { Quote } from "@/types/quote";
+import type { Invoice } from "@/types/invoice";
 
 // Fonction utilitaire pour formater la monnaie sans séparateur de milliers
 const formatCurrency = (amount: number): string => {

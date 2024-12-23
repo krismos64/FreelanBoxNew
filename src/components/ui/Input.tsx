@@ -3,6 +3,7 @@ import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  multiline?: boolean;
   label?: string;
   error?: string;
   isTextArea?: boolean;

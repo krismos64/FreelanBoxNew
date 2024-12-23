@@ -85,26 +85,29 @@ export const LandingPage: React.FC = () => {
               <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
                 Bienvenue sur FreelanceBox
               </h1>
-              <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed mb-8">
                 La solution tout-en-un pour gérer votre activité de freelance
                 avec simplicité et professionnalisme.
               </p>
-            </motion.div>
 
-            {/* CTA Button */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-            >
-              <Button
-                onClick={() => navigate("/dashboard")}
-                size="lg"
-                className="text-lg px-8 py-4 bg-white text-primary-600 hover:bg-white/90 hover:scale-105 transform transition-all duration-300 shadow-xl"
-              >
-                Commencer maintenant
-                <ArrowRightIcon className="w-5 h-5 ml-2" />
-              </Button>
+              {/* Boutons d'authentification */}
+              <div className="flex justify-center gap-4">
+                <Button
+                  onClick={() => navigate("/login")}
+                  size="lg"
+                  variant="outline"
+                  className="text-lg px-8 py-4 bg-white text-primary-600 hover:bg-white/90 hover:scale-105 transform transition-all duration-300 shadow-xl"
+                >
+                  Se connecter
+                </Button>
+                <Button
+                  onClick={() => navigate("/register")}
+                  size="lg"
+                  className="text-lg px-8 py-4 bg-primary-600 text-white hover:bg-primary-700 hover:scale-105 transform transition-all duration-300 shadow-xl"
+                >
+                  S'inscrire
+                </Button>
+              </div>
             </motion.div>
           </div>
         </div>

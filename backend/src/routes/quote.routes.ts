@@ -1,26 +1,27 @@
-import { Router } from 'express';
-import { 
+import { Router } from "express";
+import {
   createQuote,
   getQuotes,
   getQuote,
   updateQuote,
   updateQuoteStatus,
   deleteQuotes,
-  downloadQuote
-} from '../controllers/quote.controller';
-import { auth } from '../middleware/auth';
-import { asyncHandler } from '../middleware/asyncHandler';
+  downloadQuote,
+} from "../controllers/quote.controller";
+import { auth } from "../middleware/auth";
+import { asyncHandler } from "../middleware/asyncHandler";
 
-const router = Router();
+const quoteRouter: Router = Router();
 
-router.use(auth);
+quoteRouter.use(auth);
 
-router.post('/', asyncHandler(createQuote));
-router.get('/', asyncHandler(getQuotes));
-router.get('/:id', asyncHandler(getQuote));
-router.put('/:id', asyncHandler(updateQuote));
-router.patch('/:id/status', asyncHandler(updateQuoteStatus));
-router.delete('/', asyncHandler(deleteQuotes));
-router.get('/:id/download', asyncHandler(downloadQuote));
+// Configurer les routes
+quoteRouter.post("/", asyncHandler(createQuote));
+quoteRouter.get("/", asyncHandler(getQuotes));
+quoteRouter.get("/:id", asyncHandler(getQuote));
+quoteRouter.put("/:id", asyncHandler(updateQuote));
+quoteRouter.patch("/:id/status", asyncHandler(updateQuoteStatus));
+quoteRouter.delete("/", asyncHandler(deleteQuotes));
+quoteRouter.get("/:id/download", asyncHandler(downloadQuote));
 
-export default router;
+export default quoteRouter;

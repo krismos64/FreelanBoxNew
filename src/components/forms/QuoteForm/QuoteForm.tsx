@@ -1,13 +1,18 @@
-import React from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { ClientSelect } from '@/components/forms/shared/ClientSelect';
-import { PlusIcon, TrashIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { quoteSchema } from './schema';
-import { addMonths } from 'date-fns';
-import type { QuoteFormProps } from './types';
+import React from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
+import { ClientSelect } from "@/components/forms/shared/ClientSelect";
+import {
+  PlusIcon,
+  TrashIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+} from "@heroicons/react/24/outline";
+import { quoteSchema } from "./schema";
+import { addMonths } from "date-fns";
+import type { QuoteFormProps } from "./types";
 
 export const QuoteForm: React.FC<QuoteFormProps> = ({
   onSubmit,
@@ -24,22 +29,32 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   } = useForm({
     resolver: zodResolver(quoteSchema),
     defaultValues: {
-      clientId: initialData?.client?.id || '',
-      items: initialData?.items || [{ description: '', quantity: 1, unitPrice: 0 }],
-      date: initialData?.date || new Date().toISOString().split('T')[0],
-      validUntil: initialData?.validUntil || addMonths(new Date(), 1).toISOString().split('T')[0],
-      notes: initialData?.notes || '',
-      termsAndConditions: initialData?.termsAndConditions || 'TVA non applicable, article 293 B du CGI.',
+      clientId: initialData?.client?.id || "",
+      items: initialData?.items || [
+        { description: "", quantity: 1, unitPrice: 0 },
+      ],
+      date: initialData?.date || new Date().toISOString().split("T")[0],
+      validUntil:
+        initialData?.validUntil ||
+        addMonths(new Date(), 1).toISOString().split("T")[0],
+      notes: initialData?.notes || "",
+      termsAndConditions:
+        initialData?.termsAndConditions ||
+        "TVA non applicable, article 293 B du CGI.",
     },
   });
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'items',
+    name: "items",
   });
 
-  const items = watch('items');
-  const total = items?.reduce((sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0), 0) || 0;
+  const items = watch("items");
+  const total =
+    items?.reduce(
+      (sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0),
+      0
+    ) || 0;
 
   const handleUnitPriceChange = (index: number, change: number) => {
     const currentPrice = items[index].unitPrice || 0;
@@ -51,7 +66,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       <div className="space-y-4">
         <ClientSelect
           label="Client"
-          {...register('clientId')}
+          {...register("clientId")}
           error={errors.clientId?.message}
         />
 
@@ -59,13 +74,13 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           <Input
             label="Date d'émission"
             type="date"
-            {...register('date')}
+            {...register("date")}
             error={errors.date?.message}
           />
           <Input
             label="Date de validité"
             type="date"
-            {...register('validUntil')}
+            {...register("validUntil")}
             error={errors.validUntil?.message}
           />
         </div>
@@ -80,7 +95,9 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
             type="button"
             variant="secondary"
             size="sm"
-            onClick={() => append({ description: '', quantity: 1, unitPrice: 0 })}
+            onClick={() =>
+              append({ description: "", quantity: 1, unitPrice: 0 })
+            }
           >
             <PlusIcon className="h-4 w-4 mr-2" />
             Ajouter une ligne
@@ -88,7 +105,10 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
         </div>
 
         {fields.map((field, index) => (
-          <div key={field.id} className="grid grid-cols-12 gap-4 items-start bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+          <div
+            key={field.id}
+            className="grid grid-cols-12 gap-4 items-start bg-gray-50 dark:bg-gray-800 p-4 rounded-lg"
+          >
             <div className="col-span-12 md:col-span-6">
               <Input
                 label="Description"
@@ -103,7 +123,9 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                 label="Quantité"
                 type="number"
                 min="1"
-                {...register(`items.${index}.quantity`, { valueAsNumber: true })}
+                {...register(`items.${index}.quantity`, {
+                  valueAsNumber: true,
+                })}
                 error={errors.items?.[index]?.quantity?.message}
               />
             </div>
@@ -115,7 +137,9 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                     type="number"
                     step="0.01"
                     min="0"
-                    {...register(`items.${index}.unitPrice`, { valueAsNumber: true })}
+                    {...register(`items.${index}.unitPrice`, {
+                      valueAsNumber: true,
+                    })}
                     error={errors.items?.[index]?.unitPrice?.message}
                   />
                 </div>
@@ -156,7 +180,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       <div className="space-y-4">
         <Input
           label="Notes"
-          {...register('notes')}
+          {...register("notes")}
           error={errors.notes?.message}
           multiline
           rows={3}
@@ -164,7 +188,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
         <Input
           label="Conditions et mentions légales"
-          {...register('termsAndConditions')}
+          {...register("termsAndConditions")}
           error={errors.termsAndConditions?.message}
           multiline
           rows={3}
@@ -173,15 +197,15 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
 
       <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="text-lg font-semibold text-gray-900 dark:text-white">
-          Total TTC : {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(total)}
+          Total TTC :{" "}
+          {new Intl.NumberFormat("fr-FR", {
+            style: "currency",
+            currency: "EUR",
+          }).format(total)}
         </div>
         <div className="flex space-x-3">
-          <Button
-            type="submit"
-            variant="gradient"
-            isLoading={isSubmitting}
-          >
-            {initialData ? 'Mettre à jour' : 'Créer le devis'}
+          <Button type="submit" variant="gradient" isLoading={isSubmitting}>
+            {initialData ? "Mettre à jour" : "Créer le devis"}
           </Button>
         </div>
       </div>

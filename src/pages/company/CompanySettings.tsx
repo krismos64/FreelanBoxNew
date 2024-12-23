@@ -1,9 +1,9 @@
-import React, { useState, useRef } from 'react';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { useCompanyStore } from '@/store/companyStore';
-import { PhotoIcon } from '@heroicons/react/24/outline';
+import React, { useState, useRef } from "react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
+import { useCompanyStore } from "@/store/companyStore";
+import { PhotoIcon } from "@heroicons/react/24/outline";
 
 export const CompanySettings = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,7 +30,7 @@ export const CompanySettings = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -125,7 +125,7 @@ export const CompanySettings = () => {
                 value={formData.siret}
                 onChange={handleChange}
               />
-              
+
               <div className="flex justify-end space-x-3">
                 <Button
                   type="button"
@@ -137,9 +137,7 @@ export const CompanySettings = () => {
                 >
                   Annuler
                 </Button>
-                <Button type="submit">
-                  Enregistrer
-                </Button>
+                <Button type="submit">Enregistrer</Button>
               </div>
             </form>
           ) : (
@@ -160,11 +158,14 @@ export const CompanySettings = () => {
   );
 };
 
-const InfoRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+const InfoRow: React.FC<{ label: string; value: string }> = ({
+  label,
+  value,
+}) => (
   <div className="flex justify-between py-2 border-b dark:border-gray-700">
     <span className="text-gray-600 dark:text-gray-400">{label}</span>
     <span className="font-medium text-gray-900 dark:text-white">
-      {value || '-'}
+      {value || "-"}
     </span>
   </div>
 );

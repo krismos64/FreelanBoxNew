@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/Button";
 import type { CalendarEvent } from "@/types/calendar";
 import toast from "react-hot-toast";
@@ -19,6 +19,7 @@ const eventSchema = z.object({
 type EventFormData = z.infer<typeof eventSchema>;
 
 interface EventFormProps {
+  className?: string;
   onSubmit: (data: EventFormData) => void;
   onDelete?: (id: string) => void;
   initialData?: Partial<CalendarEvent>;

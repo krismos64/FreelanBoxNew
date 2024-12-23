@@ -1,16 +1,22 @@
-import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { z } from 'zod';
-import { AppError } from '../utils/appError';
-import { logger } from '../utils/logger';
-import { AuthRequest } from '../middleware/auth';
-import { uploadFile } from '../utils/fileUpload';
+import { PrismaClient } from "@prisma/client";
+import { Request, Response } from "express";
+import { z } from "zod";
+import AppError from "../utils/appError";
+import { logger } from "../utils/logger";
+import { uploadFile } from "../utils/fileUpload";
 
 const prisma = new PrismaClient();
 
+// Types
+interface RequestWithUserId extends Request {
+  userId: string;
+  file?: Express.Multer.File;
+}
+
+// Validation schema
 const clientSchema = z.object({
-  name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
-  email: z.string().email('Email invalide'),
+  name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
+  email: z.string().email("Email invalide"),
   phone: z.string().optional(),
   address: z.string().optional(),
   postalCode: z.string().optional(),
@@ -18,7 +24,10 @@ const clientSchema = z.object({
   siret: z.string().optional(),
 });
 
-export const createClient = async (req: AuthRequest, res: Response) => {
+const createClient = async (
+  req: RequestWithUserId,
+  res: Response
+): Promise<void> => {
   try {
     const data = clientSchema.parse(req.body);
     let logoUrl: string | undefined;
@@ -31,26 +40,29 @@ export const createClient = async (req: AuthRequest, res: Response) => {
       data: {
         ...data,
         logo: logoUrl,
-        userId: req.userId!,
+        userId: req.userId,
         revenue: 0,
       },
     });
 
     res.status(201).json(client);
   } catch (error) {
-    logger.error('Error creating client:', error);
+    logger.error("Error creating client:", error);
     if (error instanceof z.ZodError) {
-      throw new AppError('Données invalides', 400);
+      throw new AppError("Données invalides", 400);
     }
     throw error;
   }
 };
 
-export const getClients = async (req: AuthRequest, res: Response) => {
+const getClients = async (
+  req: RequestWithUserId,
+  res: Response
+): Promise<void> => {
   try {
     const clients = await prisma.client.findMany({
       where: {
-        userId: req.userId!,
+        userId: req.userId,
       },
       include: {
         quotes: {
@@ -73,25 +85,27 @@ export const getClients = async (req: AuthRequest, res: Response) => {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
     res.json(clients);
   } catch (error) {
-    logger.error('Error fetching clients:', error);
+    logger.error("Error fetching clients:", error);
     throw error;
   }
 };
 
-export const getClient = async (req: AuthRequest, res: Response) => {
+const getClient = async (
+  req: RequestWithUserId,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
-
     const client = await prisma.client.findUnique({
       where: {
         id,
-        userId: req.userId!,
+        userId: req.userId,
       },
       include: {
         quotes: true,
@@ -100,17 +114,20 @@ export const getClient = async (req: AuthRequest, res: Response) => {
     });
 
     if (!client) {
-      throw new AppError('Client non trouvé', 404);
+      throw new AppError("Client non trouvé", 404);
     }
 
     res.json(client);
   } catch (error) {
-    logger.error('Error fetching client:', error);
+    logger.error("Error fetching client:", error);
     throw error;
   }
 };
 
-export const updateClient = async (req: AuthRequest, res: Response) => {
+const updateClient = async (
+  req: RequestWithUserId,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const data = clientSchema.parse(req.body);
@@ -119,12 +136,12 @@ export const updateClient = async (req: AuthRequest, res: Response) => {
     const existingClient = await prisma.client.findUnique({
       where: {
         id,
-        userId: req.userId!,
+        userId: req.userId,
       },
     });
 
     if (!existingClient) {
-      throw new AppError('Client non trouvé', 404);
+      throw new AppError("Client non trouvé", 404);
     }
 
     if (req.file) {
@@ -134,7 +151,7 @@ export const updateClient = async (req: AuthRequest, res: Response) => {
     const updatedClient = await prisma.client.update({
       where: {
         id,
-        userId: req.userId!,
+        userId: req.userId,
       },
       data: {
         ...data,
@@ -144,20 +161,23 @@ export const updateClient = async (req: AuthRequest, res: Response) => {
 
     res.json(updatedClient);
   } catch (error) {
-    logger.error('Error updating client:', error);
+    logger.error("Error updating client:", error);
     if (error instanceof z.ZodError) {
-      throw new AppError('Données invalides', 400);
+      throw new AppError("Données invalides", 400);
     }
     throw error;
   }
 };
 
-export const deleteClients = async (req: AuthRequest, res: Response) => {
+const deleteClients = async (
+  req: RequestWithUserId,
+  res: Response
+): Promise<void> => {
   try {
     const { ids } = req.body;
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      throw new AppError('Liste d\'identifiants invalide', 400);
+      throw new AppError("Liste d'identifiants invalide", 400);
     }
 
     await prisma.client.deleteMany({
@@ -165,13 +185,15 @@ export const deleteClients = async (req: AuthRequest, res: Response) => {
         id: {
           in: ids,
         },
-        userId: req.userId!,
+        userId: req.userId,
       },
     });
 
     res.status(204).send();
   } catch (error) {
-    logger.error('Error deleting clients:', error);
+    logger.error("Error deleting clients:", error);
     throw error;
   }
 };
+
+export { createClient, getClients, getClient, updateClient, deleteClients };

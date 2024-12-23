@@ -1,9 +1,8 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 
 const router = Router();
 
-// Exemple de route
-router.get("/users", (req, res) => {
+router.get("/users", (_req: Request, res: Response) => {
   res.send("Liste des utilisateurs");
 });
 

@@ -1,24 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/appError';
-import { logger } from '../utils/logger';
+import { Request, Response, NextFunction } from "express";
 
-export const errorHandler = (
+const errorHandler = (
   err: Error,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
-  logger.error(err);
-
-  if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message
-    });
-  }
-
-  return res.status(500).json({
-    status: 'error',
-    message: 'Something went wrong'
-  });
+  console.error(err.stack);
+  res.status(500).json({ message: err.message });
 };
+
+export { errorHandler };

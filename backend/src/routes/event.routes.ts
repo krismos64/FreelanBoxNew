@@ -1,20 +1,39 @@
-import { Router } from 'express';
-import { 
-  createEvent,
-  getEvents,
-  updateEvent,
-  deleteEvent
-} from '../controllers/event.controller';
-import { auth } from '../middleware/auth';
-import { asyncHandler } from '../middleware/asyncHandler';
+import { Router } from "express";
+import * as controllers from "../controllers/event.controller";
+import { auth } from "../middleware/auth";
+import { asyncHandler } from "../middleware/asyncHandler";
 
-const router = Router();
+interface RouterMiddleware {
+  auth: typeof auth;
+  asyncHandler: typeof asyncHandler;
+}
 
-router.use(auth);
+const middleware: RouterMiddleware = {
+  auth,
+  asyncHandler,
+};
 
-router.post('/', asyncHandler(createEvent));
-router.get('/', asyncHandler(getEvents));
-router.put('/:id', asyncHandler(updateEvent));
-router.delete('/:id', asyncHandler(deleteEvent));
+const makeEventRouter = (
+  router: typeof Router,
+  eventControllers: typeof controllers,
+  middleware: RouterMiddleware
+): Router => {
+  const eventRouter = router();
 
-export default router;
+  eventRouter.use(middleware.auth);
+
+  eventRouter.post("/", middleware.asyncHandler(eventControllers.createEvent));
+  eventRouter.get("/", middleware.asyncHandler(eventControllers.getEvents));
+  eventRouter.put(
+    "/:id",
+    middleware.asyncHandler(eventControllers.updateEvent)
+  );
+  eventRouter.delete(
+    "/:id",
+    middleware.asyncHandler(eventControllers.deleteEvent)
+  );
+
+  return eventRouter;
+};
+
+export default makeEventRouter(Router, controllers, middleware);

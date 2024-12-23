@@ -1,48 +1,98 @@
-import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { AppError } from '../utils/appError';
-import { logger } from '../utils/logger';
-import { AuthRequest } from '../middleware/auth';
+import { PrismaClient } from "@prisma/client";
+import { Request, Response } from "express";
+import { startOfYear, endOfYear, format } from "date-fns";
+import { fr } from "date-fns/locale";
+import AppError from "../utils/appError";
+import { logger } from "../utils/logger";
 
 const prisma = new PrismaClient();
 
-export const getStatistics = async (req: AuthRequest, res: Response) => {
+// Types
+interface RequestWithUserId extends Request {
+  userId: string;
+}
+
+interface StatisticsQuery {
+  startDate?: string;
+  endDate?: string;
+  clientId?: string;
+}
+
+interface InvoiceStats {
+  total: number;
+  draft: number;
+  sent: number;
+  pending: number;
+  paid: number;
+}
+
+interface QuoteStats {
+  total: number;
+  draft: number;
+  sent: number;
+  accepted: number;
+  rejected: number;
+}
+
+interface MonthlyRevenue {
+  month: string;
+  amount: number;
+}
+
+interface StatisticsResponse {
+  overview: {
+    totalRevenue: number;
+    monthlyRevenue: MonthlyRevenue[];
+    conversionRate: number;
+  };
+  invoices: InvoiceStats;
+  quotes: QuoteStats;
+  clients: any[]; // Type à définir selon la structure exacte des données client
+}
+
+const getStatistics = async (
+  req: RequestWithUserId,
+  res: Response
+): Promise<void> => {
   try {
-    const { startDate, endDate, clientId } = req.query;
-    const start = startDate ? new Date(startDate as string) : startOfYear(new Date());
-    const end = endDate ? new Date(endDate as string) : endOfYear(new Date());
+    const { startDate, endDate, clientId } = req.query as StatisticsQuery;
+    const start = startDate ? new Date(startDate) : startOfYear(new Date());
+    const end = endDate ? new Date(endDate) : endOfYear(new Date());
 
     const whereClause = {
-      userId: req.userId!,
+      userId: req.userId,
       date: {
         gte: start,
         lte: end,
       },
-      ...(clientId && { clientId: clientId as string }),
+      ...(clientId && { clientId }),
     };
 
     // Récupérer toutes les factures payées
     const paidInvoices = await prisma.invoice.findMany({
       where: {
         ...whereClause,
-        status: 'paid',
+        status: "paid",
       },
       include: {
         client: true,
       },
       orderBy: {
-        date: 'asc',
+        date: "asc",
       },
     });
 
     // Calculer les chiffres d'affaires
-    const totalRevenue = paidInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
+    const totalRevenue = paidInvoices.reduce(
+      (sum, invoice) => sum + invoice.total,
+      0
+    );
     const monthlyRevenue = new Map<string, number>();
 
-    paidInvoices.forEach(invoice => {
-      const monthKey = format(new Date(invoice.date), 'MMMM yyyy', { locale: fr });
+    paidInvoices.forEach((invoice) => {
+      const monthKey = format(new Date(invoice.date), "MMMM yyyy", {
+        locale: fr,
+      });
       const current = monthlyRevenue.get(monthKey) || 0;
       monthlyRevenue.set(monthKey, current + invoice.total);
     });
@@ -53,36 +103,39 @@ export const getStatistics = async (req: AuthRequest, res: Response) => {
     });
 
     const totalQuotes = quotes.length;
-    const acceptedQuotes = quotes.filter(quote => quote.status === 'accepted').length;
-    const conversionRate = totalQuotes > 0 ? (acceptedQuotes / totalQuotes) * 100 : 0;
+    const acceptedQuotes = quotes.filter(
+      (quote) => quote.status === "accepted"
+    ).length;
+    const conversionRate =
+      totalQuotes > 0 ? (acceptedQuotes / totalQuotes) * 100 : 0;
 
     // Statistiques des factures
     const invoices = await prisma.invoice.findMany({
       where: whereClause,
     });
 
-    const invoiceStats = {
+    const invoiceStats: InvoiceStats = {
       total: invoices.length,
-      draft: invoices.filter(inv => inv.status === 'draft').length,
-      sent: invoices.filter(inv => inv.status === 'sent').length,
-      pending: invoices.filter(inv => inv.status === 'pending').length,
-      paid: invoices.filter(inv => inv.status === 'paid').length,
+      draft: invoices.filter((inv) => inv.status === "draft").length,
+      sent: invoices.filter((inv) => inv.status === "sent").length,
+      pending: invoices.filter((inv) => inv.status === "pending").length,
+      paid: invoices.filter((inv) => inv.status === "paid").length,
     };
 
     // Statistiques des devis
-    const quoteStats = {
+    const quoteStats: QuoteStats = {
       total: quotes.length,
-      draft: quotes.filter(q => q.status === 'draft').length,
-      sent: quotes.filter(q => q.status === 'sent').length,
+      draft: quotes.filter((q) => q.status === "draft").length,
+      sent: quotes.filter((q) => q.status === "sent").length,
       accepted: acceptedQuotes,
-      rejected: quotes.filter(q => q.status === 'rejected').length,
+      rejected: quotes.filter((q) => q.status === "rejected").length,
     };
 
     // Statistiques par client
     const clientStats = await prisma.client.findMany({
       where: {
-        userId: req.userId!,
-        ...(clientId && { id: clientId as string }),
+        userId: req.userId,
+        ...(clientId && { id: clientId }),
       },
       select: {
         id: true,
@@ -94,38 +147,45 @@ export const getStatistics = async (req: AuthRequest, res: Response) => {
         invoices: {
           where: {
             ...whereClause,
-            status: 'paid',
+            status: "paid",
           },
         },
       },
     });
 
-    res.json({
+    const response: StatisticsResponse = {
       overview: {
         totalRevenue,
-        monthlyRevenue: Array.from(monthlyRevenue.entries()).map(([month, amount]) => ({
-          month,
-          amount,
-        })),
+        monthlyRevenue: Array.from(monthlyRevenue.entries()).map(
+          ([month, amount]) => ({
+            month,
+            amount,
+          })
+        ),
         conversionRate,
       },
       invoices: invoiceStats,
       quotes: quoteStats,
       clients: clientStats,
-    });
+    };
+
+    res.json(response);
   } catch (error) {
-    logger.error('Error fetching statistics:', error);
+    logger.error("Error fetching statistics:", error);
     throw error;
   }
 };
 
-export const exportData = async (req: AuthRequest, res: Response) => {
+const exportData = async (
+  req: RequestWithUserId,
+  res: Response
+): Promise<void> => {
   try {
-    const { format } = req.query;
+    const { format } = req.query as { format?: string };
 
     const data = await prisma.user.findUnique({
       where: {
-        id: req.userId!,
+        id: req.userId,
       },
       include: {
         company: true,
@@ -145,25 +205,30 @@ export const exportData = async (req: AuthRequest, res: Response) => {
     });
 
     if (!data) {
-      throw new AppError('Utilisateur non trouvé', 404);
+      throw new AppError("Utilisateur non trouvé", 404);
     }
 
     // Supprimer les informations sensibles
-    delete data.password;
-    delete data.refreshTokens;
+    const exportData = {
+      ...data,
+      password: undefined,
+      refreshTokens: undefined,
+    };
 
-    if (format === 'csv') {
+    if (format === "csv") {
       // TODO: Implémenter l'export CSV
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', 'attachment; filename=export.csv');
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", "attachment; filename=export.csv");
       // res.send(convertToCSV(data));
     } else {
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', 'attachment; filename=export.json');
-      res.send(JSON.stringify(data, null, 2));
+      res.setHeader("Content-Type", "application/json");
+      res.setHeader("Content-Disposition", "attachment; filename=export.json");
+      res.send(JSON.stringify(exportData, null, 2));
     }
   } catch (error) {
-    logger.error('Error exporting data:', error);
+    logger.error("Error exporting data:", error);
     throw error;
   }
 };
+
+export { getStatistics, exportData };

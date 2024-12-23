@@ -1,11 +1,11 @@
-import React, { useRef } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { PhotoIcon } from '@heroicons/react/24/outline';
-import type { ClientFormProps } from './types';
-import { clientSchema } from './schema';
+import React, { useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
+import { PhotoIcon } from "@heroicons/react/24/outline";
+import type { ClientFormProps } from "./types";
+import { clientSchema } from "./schema";
 
 export const ClientForm: React.FC<ClientFormProps> = ({
   onSubmit,
@@ -24,14 +24,14 @@ export const ClientForm: React.FC<ClientFormProps> = ({
     defaultValues: initialData,
   });
 
-  const logo = watch('logo');
+  const logo = watch("logo");
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setValue('logo', reader.result as string);
+        setValue("logo", reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -41,7 +41,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Logo Upload */}
       <div className="flex flex-col items-center space-y-4">
-        <div 
+        <div
           className="w-32 h-32 relative flex items-center justify-center border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-500 transition-colors cursor-pointer"
           onClick={() => fileInputRef.current?.click()}
         >
@@ -71,58 +71,50 @@ export const ClientForm: React.FC<ClientFormProps> = ({
 
       {/* Contact Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="Nom"
-          {...register('name')}
-          error={errors.name?.message}
-        />
+        <Input label="Nom" {...register("name")} error={errors.name?.message} />
         <Input
           label="Email"
           type="email"
-          {...register('email')}
+          {...register("email")}
           error={errors.email?.message}
         />
       </div>
 
       <Input
         label="Téléphone"
-        {...register('phone')}
+        {...register("phone")}
         error={errors.phone?.message}
       />
 
       {/* Address Information */}
       <Input
         label="Adresse"
-        {...register('address')}
+        {...register("address")}
         error={errors.address?.message}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
           label="Code postal"
-          {...register('postalCode')}
+          {...register("postalCode")}
           error={errors.postalCode?.message}
         />
         <Input
           label="Ville"
-          {...register('city')}
+          {...register("city")}
           error={errors.city?.message}
         />
       </div>
 
       <Input
         label="SIRET (optionnel)"
-        {...register('siret')}
+        {...register("siret")}
         error={errors.siret?.message}
       />
 
       <div className="flex justify-end space-x-3">
-        <Button
-          type="submit"
-          variant="gradient"
-          isLoading={isSubmitting}
-        >
-          {initialData ? 'Mettre à jour' : 'Créer le client'}
+        <Button type="submit" variant="gradient" isLoading={isSubmitting}>
+          {initialData ? "Mettre à jour" : "Créer le client"}
         </Button>
       </div>
     </form>
